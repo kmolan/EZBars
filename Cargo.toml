@@ -1,0 +1,7 @@
+[package]
+name = "ezbars"
+version = "0.1.0"
+edition = "2021"
+description = "A lightweight, highly customizable CLI progress bar."
+
+[dependencies]
