@@ -3,14 +3,13 @@ use std::io::{self, Write};
 use std::rc::Rc;
 
 use crate::iter::ProgressBarIter;
+use crate::theme::Theme; // Import our new theme!
 
-// Hidden from the user, but accessible to internal modules
 pub(crate) struct SharedState {
     pub(crate) total: usize,
     pub(crate) current: usize,
     pub(crate) width: usize,
-    pub(crate) fill_char: char,
-    pub(crate) empty_char: char,
+    pub(crate) theme: Theme, // Replaced fill_char and empty_char
     pub(crate) desc: String,
     pub(crate) postfix: String,
 }
@@ -18,27 +17,36 @@ pub(crate) struct SharedState {
 impl SharedState {
     pub(crate) fn print(&self) {
         let percent = if self.total == 0 { 1.0 } else { self.current as f64 / self.total as f64 };
-        let filled_len = (percent * self.width as f64).round() as usize;
-        let empty_len = self.width.saturating_sub(filled_len);
-
-        let filled_bar = self.fill_char.to_string().repeat(filled_len);
-        let empty_bar = self.empty_char.to_string().repeat(empty_len);
+        
+        let bar_string = self.theme.render(self.width, self.current, self.total);
 
         let prefix = if self.desc.is_empty() { String::new() } else { format!("{}: ", self.desc) };
         let suffix = if self.postfix.is_empty() { String::new() } else { format!(", {}", self.postfix) };
 
+        // 1. Dynamically decide on boundary characters
+        let (left_bracket, right_bracket) = match self.theme {
+            Theme::Spinner | Theme::Claude => ("", ""), // No boundaries for spinners!
+            _ => ("|", "|"),                            // Standard boundaries for bars
+        };
+
+        let stats = match self.theme {
+            Theme::Spinner | Theme::Claude => String::new(), // Hide stats for spinners
+            _ => format!(" {}% [{}/{}]", (percent * 100.0) as usize, self.current, self.total),
+        };
+
+        // 2. Update the print! macro to use our new dynamic brackets
         print!(
-            "\r{}|{}{}| {}% [{}/{}{}]{}",
-            prefix, filled_bar, empty_bar, (percent * 100.0) as usize,
-            self.current, self.total, suffix, "\x1b[K"
+            "\r{}{}{}{}{}{}{}",
+            prefix, left_bracket, bar_string, right_bracket, stats, suffix, "\x1b[K"
         );
+
         io::stdout().flush().unwrap();
     }
 
     pub(crate) fn write(&self, msg: &str) {
-        print!("\r\x1b[K"); // Clear current line
-        println!("{}", msg);  // Print message
-        self.print();         // Redraw bar
+        print!("\r\x1b[K"); 
+        println!("{}", msg);  
+        self.print();         
     }
 }
 
@@ -48,9 +56,7 @@ pub struct ProgressBar {
 }
 
 impl Default for ProgressBar {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl ProgressBar {
@@ -60,8 +66,7 @@ impl ProgressBar {
                 total: 0,
                 current: 0,
                 width: 40,
-                fill_char: '█',
-                empty_char: '-',
+                theme: Theme::default(), // Use default theme
                 desc: String::new(),
                 postfix: String::new(),
             })),
@@ -73,13 +78,9 @@ impl ProgressBar {
         self
     }
 
-    pub fn fill_char(self, c: char) -> Self {
-        self.state.borrow_mut().fill_char = c;
-        self
-    }
-
-    pub fn empty_char(self, c: char) -> Self {
-        self.state.borrow_mut().empty_char = c;
+    // New builder method for themes
+    pub fn theme(self, theme: Theme) -> Self {
+        self.state.borrow_mut().theme = theme;
         self
     }
 
