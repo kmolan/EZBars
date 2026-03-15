@@ -24,22 +24,7 @@ fn failed_bar() {
 }
 
 #[rustfmt::skip]
-fn multiple_bars() {
-    let conn_pb = ProgressBar::new()
-        .total(100)
-        .theme(Theme::Bouncing(4, '█', '·'))
-        .desc("Connecting to Host");
-
-    // Simulate waiting for a handshake
-    for _ in 0..40 {
-        conn_pb.inc(1);
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
-    conn_pb.finish_with_message("Connected!");
-    
-    // Add a small gap after the connection is established
-    println!();
-
+fn multiple_bars() {    
     // --- Multi-Bar Operations ---
     let mut multi = MultiProgress::new();
 
@@ -50,7 +35,7 @@ fn multiple_bars() {
     let pb2 = multi.add(ProgressBar::new().total(100).theme(Theme::Classic('█', '░')).desc("Net Sync"));
 
     // 3. A Rocket bar just for the flair
-    let pb3 = multi.add(ProgressBar::new().total(100).theme(Theme::Rocket).desc("Delivery") );
+    let pb3 = multi.add(ProgressBar::new().total(100).theme(Theme::VerticalFill).desc("Delivery") );
 
     // Run a loop for 100 iterations
     for i in 1..=100 {
@@ -76,21 +61,60 @@ fn multiple_bars() {
     pb3.finish_with_message("Package landed!");
 }
 
+fn otf_updates() {
+    let pb = ProgressBar::new()
+        .total(100)
+        .theme(Theme::Gradient("#FF00FF".into(), "#00FFFF".into()))
+        .desc("Initializing...");
+
+    for i in 0..=100 {
+        // 2. Update the text description on-the-fly based on progress
+        if i == 20 {
+            pb.set_description("Loading Assets");
+        }
+        if i == 50 {
+            pb.set_description("Connecting to API");
+        }
+        if i == 80 {
+            pb.set_description("Finalizing Data");
+        }
+
+        // 3. Increment the bar
+        pb.inc(1);
+
+        thread::sleep(Duration::from_millis(50));
+    }
+
+    pb.finish_with_message("Process Complete!");
+}
+
 fn main() {
-    println!("\n\nThe progress bar below will \x1b[32mSUCCEED\x1b[0m");
+    println!("\n\nThe classic EZ way:");
+    let pb = ProgressBar::new();
+    for _ in pb.wrap(0..20) {
+        thread::sleep(Duration::from_millis(50));
+    }
+
+    println!("\n\nProgress bars can \x1b[32mSUCCEED\x1b[0m");
     success_bar();
 
-    println!("\n\nThe progress bar below will \x1b[31mFAIL\x1b[0m");
+    println!("\n\nProgress bars can \x1b[31mFAIL\x1b[0m");
     failed_bar();
 
-    println!("\n\nThe progress bar below will VANISH after its finished");
-    let pb_ghost = ProgressBar::new().desc("Ghost Bar").clear_on_finish(true);
+    println!("\n\nProgress bars can VANISH after they're done!");
+    let pb_ghost = ProgressBar::new()
+        .theme(Theme::Marquee("#FF0000".into(), "#444444".into()))
+        .desc("Loading...")
+        .clear_on_finish(true);
     for _ in pb_ghost.wrap(0..20) {
         thread::sleep(Duration::from_millis(100));
     }
 
-    println!("\n\nSpawn multiple bars at once!");
+    println!("\n\nDynamic text and colors!");
+    otf_updates();
+
+    println!("\n\nNested bars!");
     multiple_bars();
 
-    println!("\n\nAll showcases complete!");
+    println!("\n");
 }

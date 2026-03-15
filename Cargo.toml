@@ -1,7 +1,15 @@
 [package]
 name = "ezbars"
-version = "0.1.0"
+version = "0.0.1"
+authors = ["akathail <anmolkathail@gmail.com>"]
 edition = "2021"
-description = "A lightweight, highly customizable CLI progress bar."
+description = "Progress bars in rust - the ez way"
+repository = "https://github.com/kmolan/EZBars"
+license = "MIT"
+readme = "README.md"
+keywords = ["cli", "progressbar", "progress", "pb", "colors"]
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 [dependencies]

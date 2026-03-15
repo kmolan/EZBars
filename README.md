@@ -1,15 +1,25 @@
-# Rust TQDM-Style Progress Bar
+# EZBars
+![github](https://github.com/kmolan/EZBars/actions/workflows/build-tests.yml/badge.svg)
+![github](https://github.com/kmolan/EZBars/actions/workflows/code-coverage.yml/badge.svg)
 
-A lightweight, highly customizable, and thread-safe-ready CLI progress bar for Rust. Inspired by Python's beloved `tqdm` library, this tool completely separates your iteration logic from your terminal display logic.
+A lightweight, highly customizable, and thread-safe-ready CLI progress bar for Rust.
+
+
+![EZBars demo](./assets/functionality_demo.gif)
 
 ## Features
 
-* **Clean Syntax:** Wrap any exact-size iterator and get a visual progress bar instantly.
-* **Builder Pattern Configuration:** Easily customize the width, characters, and initial text.
-* **Dynamic Text Updates:** Change the prefix (description) and suffix (postfix metrics) on the fly from *inside* your `for` loop without fighting the borrow checker.
-* **Safe Logging:** Print standard log messages (`println!` style) without breaking or overwriting the visual progress bar.
+* **EZ Syntax:** Wrap any exact-size iterator and get a visual progress bar instantly. Alternatively, create and manually tick the progress bar as needed.
+* **Unicode-Safe Rendering:** Full support for multi-byte characters, emojis and specialized symbols.
+* **Dynamic Text Updates:** Change the bar metrics and text on the fly. Let the users know exactly what's going on at any time.
+* **Lifecycle States:** Let users know the final outcome using a success (green) or Failure (red) state. Configure whether to clear the bar from the terminal or persist upon completion. Keep it clean!
+* **Safe Logging:** Only activates if running in a terminal to prevent piped output or log file clutter, encouraging hassle-free usage.
+* **Multi-Bar Orchestration:** Spawn multiple bars at once seamlessly! EZBars auomatically adjust themselves on your terminal when in a nested configuration.
+* **Extensive library of built-in styles:** Choose from over 20 customizable styles: pick deterministic styles for percentage-based tracking or indeterminate spinners for active loading.
 
 ---
+
+![style demo](./assets/style_demo.gif)
 
 ## Quick Start
 
@@ -149,10 +159,3 @@ fn main() {
 - Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
 - No-terminal Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
 - Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
-
-## TODO
-
-- Template Strings: Instead of hardcoding where the description, bar, and stats go, allow users to define a template like:
-  "{desc} {bar} {percentage} | {eta}".
-
-- Pause/Resume: Methods to temporarily stop the timer and stop the animation if the program needs to wait for user input or an external event.
