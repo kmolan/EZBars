@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::io::{self, Write};
+use std::io::Write;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -24,6 +24,7 @@ pub(crate) struct SharedState {
     pub(crate) clear_on_finish: bool,
     pub(crate) status: Status,
     pub(crate) final_message: Option<String>,
+    pub(crate) offset: usize, // Vertical distance from the bottom line
 }
 
 impl SharedState {
@@ -126,17 +127,32 @@ impl SharedState {
             String::new()
         };
 
+        let move_up = if self.offset > 0 {
+            format!("\x1b[{}A", self.offset)
+        } else {
+            String::new()
+        };
+
+        let move_down = if self.offset > 0 {
+            format!("\x1b[{}B", self.offset)
+        } else {
+            String::new()
+        };
+
         print!(
-            "\r{}{}{}{}{}{}{}\x1b[K",
+            "\r{}{}{}{}{}{}{}{}\x1b[K{}",
+            move_up,
             prefix,
             left,
             bar_string,
             right,
             stats,
             self.compute_eta(),
-            suffix
+            suffix,
+            move_down
         );
-        io::stdout().flush().unwrap();
+
+        std::io::Write::flush(&mut std::io::stdout()).unwrap();
     }
 }
 
@@ -165,6 +181,7 @@ impl ProgressBar {
                 clear_on_finish: false, // Default to persist
                 status: Status::Running,
                 final_message: None,
+                offset: 0,
             })),
         }
     }
@@ -213,9 +230,6 @@ impl ProgressBar {
 
         // Print one last time to the SAME line
         state.print();
-
-        // Move the cursor down so subsequent prints don't overwrite
-        println!();
     }
 
     pub fn abandon(&self, msg: &str) {
@@ -224,8 +238,6 @@ impl ProgressBar {
         state.final_message = Some(msg.to_string());
 
         state.print();
-
-        println!();
     }
 
     /// Manually set the total (useful if not using .wrap())
@@ -237,7 +249,7 @@ impl ProgressBar {
     /// Increment the progress by a specific amount
     pub fn inc(&self, amount: usize) {
         let mut state = self.state.borrow_mut();
-        
+
         // Start timer on the first manual increment
         if state.start_time.is_none() {
             state.start_time = Some(std::time::Instant::now());
