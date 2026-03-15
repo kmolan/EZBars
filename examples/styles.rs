@@ -3,45 +3,39 @@ use std::thread;
 use std::time::Duration;
 
 fn main() {
-    println!("1. The High-Resolution Smooth Bar:");
-    let pb_smooth = ProgressBar::new()
-        .width(30)
-        .theme(Theme::Smooth)
-        .desc("Downloading");
-    
-    for _ in pb_smooth.wrap(0..100) {
-        thread::sleep(Duration::from_millis(30));
+    // Format: (Enum, Description, Width, Iterations)
+    let showcase_items = vec![
+        (Theme::Smooth, "Smooth", 30, 50),
+        (Theme::FillUp, "FillUp", 30, 50),
+        (Theme::bouncing(), "bouncing", 30, 50),
+        (Theme::Spinner, "Spinner", 10, 30),
+        (Theme::Claude, "Claude", 10, 30),
+        (Theme::Pacman, "Pacman", 20, 40),
+        (Theme::Heartbeat, "Heartbeat", 20, 40),
+        (Theme::DVD, "DVD", 20, 40),
+        (Theme::WaterLevel, "WaterLevel", 30, 50),
+        (Theme::Fish, "Fish", 30, 60),
+        (Theme::Snake, "Snake", 30, 60),
+        (Theme::Waves, "Waves", 30, 60),
+        (Theme::Arrows, "Arrows", 30, 50),
+        (Theme::FishBounce, "FishBounce", 30, 50),
+        (Theme::DotWaves, "DotWaves", 30, 50),
+        (Theme::Banner(" Custom text here ".to_string()), "Banner", 30, 100),
+    ];
+
+    // 2. Loop through the list once
+    for (_, (theme, desc, width, iters)) in showcase_items.into_iter().enumerate() {
+        let pb = ProgressBar::new()
+            .width(width)
+            .theme(theme)
+            .desc(desc);
+
+        for _ in pb.wrap(0..iters) {
+            thread::sleep(Duration::from_millis(100));
+        }
+
+        print!("\n")
     }
 
-    println!("\n2. The Bouncing 'Cylon' Bar:");
-    let pb_bounce = ProgressBar::new()
-        .width(30)
-        .theme(Theme::Bouncing { block_width: 5, fill: '█', empty: ' ' })
-        .desc("Waiting for server");
-
-    for _ in pb_bounce.wrap(0..100) {
-        thread::sleep(Duration::from_millis(30));
-    }
-
-    println!("\n3. The Classic ASCII Spinner:");
-    let pb_classic_spinner = ProgressBar::new()
-        .width(10)
-        .theme(Theme::Spinner)
-        .desc("Connecting");
-
-    for _ in pb_classic_spinner.wrap(0..50) {
-        thread::sleep(Duration::from_millis(50));
-    }
-
-    println!("\n4. The 'Claude' Spinner:");
-    let pb_claude = ProgressBar::new()
-        .width(10)
-        .theme(Theme::Claude)
-        .desc("Thinking");
-
-    for _ in pb_claude.wrap(0..50) {
-        thread::sleep(Duration::from_millis(50));
-    }
-
-    println!("\nAll tasks complete!");
+    println!("\nAll showcases complete!");
 }
