@@ -26,6 +26,7 @@ pub(crate) struct SharedState {
     pub(crate) final_message: Option<String>,
     pub(crate) offset: usize, // Vertical distance from the bottom line
     pub(crate) is_terminal: bool,
+    pub(crate) smoothed_speed: f64, // Persisted EMA speed
 }
 
 impl SharedState {
@@ -37,9 +38,8 @@ impl SharedState {
         format!("{:02}:{:02}", mins, secs)
     }
 
-    fn compute_eta(&self) -> String {
+    fn compute_eta(&mut self) -> String {
         if self.status != Status::Running {
-            // Don't bother computing if progress bar is finished
             return String::new();
         }
 
@@ -47,25 +47,37 @@ impl SharedState {
 
         if let Some(start) = self.start_time {
             let elapsed = start.elapsed();
+            let elapsed_secs = elapsed.as_secs_f64();
             let elapsed_str = Self::format_duration(elapsed);
 
-            // Calculate speed (it/s)
-            let speed = if elapsed.as_secs_f64() > 0.0 {
-                self.current as f64 / elapsed.as_secs_f64()
+            // Calculate instantaneous speed
+            let instant_speed = if elapsed_secs > 0.0 {
+                self.current as f64 / elapsed_secs
             } else {
                 0.0
             };
 
-            // Calculate ETA
-            let eta_str = if speed > 0.0 && self.current < self.total {
+            // EMA Smoothing Logic: S_t = α * v_t + (1 - α) * S_{t-1}
+            let alpha = 0.2; // Smoothing factor (0.0 to 1.0)
+            if self.smoothed_speed == 0.0 {
+                self.smoothed_speed = instant_speed;
+            } else {
+                self.smoothed_speed = (alpha * instant_speed) + (1.0 - alpha) * self.smoothed_speed;
+            }
+
+            // Calculate ETA using smoothed speed
+            let eta_str = if self.smoothed_speed > 0.0 && self.current < self.total {
                 let remaining = self.total - self.current;
-                let eta_duration = Duration::from_secs_f64(remaining as f64 / speed);
+                let eta_duration = Duration::from_secs_f64(remaining as f64 / self.smoothed_speed);
                 Self::format_duration(eta_duration)
             } else {
                 "??:??".to_string()
             };
 
-            time_info = format!(" [{} < {}, {:.2} it/s]", elapsed_str, eta_str, speed);
+            time_info = format!(
+                " [{} < {}, {:.2} it/s]",
+                elapsed_str, eta_str, self.smoothed_speed
+            );
         }
 
         time_info
@@ -131,18 +143,16 @@ impl SharedState {
     }
 
     pub(crate) fn clear_line(&self) {
-        // \r moves to start, \x1b[K clears from cursor to end of line
         print!("\r\x1b[K");
         let _ = std::io::stdout().flush();
     }
 
-    pub(crate) fn print(&self) {
+    pub(crate) fn print(&mut self) {
         if !self.is_terminal {
-            // If we aren't in a terminal, don't print anything during increments.
-            // This prevents the log file from being filled with unnecessary garbage.
             return;
         }
 
+        let eta_info = self.compute_eta(); // Updates smoothed_speed internally
         let mut bar_string = self.theme.render(self.width, self.current, self.total);
         bar_string = match self.status {
             Status::Success => format!("\x1b[32m{}\x1b[0m", bar_string), // Green
@@ -163,7 +173,7 @@ impl SharedState {
             bar_string,
             right_boundary_character,
             stats,
-            self.compute_eta(),
+            eta_info,
             suffix,
             move_down
         );
@@ -190,15 +200,16 @@ impl ProgressBar {
                 total: 0,
                 current: 0,
                 width: 40,
-                theme: Theme::default(), // Use default theme
+                theme: Theme::default(),
                 desc: String::new(),
                 postfix: String::new(),
                 start_time: None,
-                clear_on_finish: false, // Default to persist
+                clear_on_finish: false,
                 status: Status::Running,
                 final_message: None,
                 offset: 0,
                 is_terminal: stdout().is_terminal(),
+                smoothed_speed: 0.0,
             })),
         }
     }
@@ -208,7 +219,6 @@ impl ProgressBar {
         self
     }
 
-    // New builder method for themes
     pub fn theme(self, theme: Theme) -> Self {
         self.state.borrow_mut().theme = theme;
         self
@@ -227,13 +237,11 @@ impl ProgressBar {
         self.state.borrow_mut().postfix = postfix.into();
     }
 
-    /// Configuration: Should the bar disappear when finished?
     pub fn clear_on_finish(self, clear: bool) -> Self {
         self.state.borrow_mut().clear_on_finish = clear;
         self
     }
 
-    /// Manual trigger to hide/clear the bar
     pub fn finish_and_clear(&self) {
         self.state.borrow_mut().clear_line();
     }
@@ -241,14 +249,12 @@ impl ProgressBar {
     pub fn finish_with_message(&self, msg: &str) {
         let mut state = self.state.borrow_mut();
         state.status = Status::Success;
-        // Snap to 100% for a clean look
         state.current = state.total;
         state.final_message = Some(msg.to_string());
 
         if state.is_terminal {
             state.print();
         } else {
-            // Log-friendly version: "Description: [Success] Message"
             println!("{}: [SUCCESS] {}", state.desc, msg);
         }
     }
@@ -261,22 +267,18 @@ impl ProgressBar {
         if state.is_terminal {
             state.print();
         } else {
-            // Log-friendly version: "Description: [Success] Message"
             println!("{}: [FAILURE] {}", state.desc, msg);
         }
     }
 
-    /// Manually set the total (useful if not using .wrap())
     pub fn total(self, total: usize) -> Self {
         self.state.borrow_mut().total = total;
         self
     }
 
-    /// Increment the progress by a specific amount
     pub fn inc(&self, amount: usize) {
         let mut state = self.state.borrow_mut();
 
-        // Start timer on the first manual increment
         if state.start_time.is_none() {
             state.start_time = Some(std::time::Instant::now());
         }
@@ -285,7 +287,6 @@ impl ProgressBar {
         state.print();
     }
 
-    /// Set progress to a specific absolute value
     pub fn set_position(&self, pos: usize) {
         let mut state = self.state.borrow_mut();
         state.current = pos.min(state.total);
