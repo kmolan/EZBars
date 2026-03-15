@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::io::{Write, stdout, IsTerminal};
+use std::io::{stdout, IsTerminal, Write};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -70,6 +70,68 @@ impl SharedState {
         time_info
     }
 
+    /// Determines the boundary characters based on the current theme
+    fn get_boundary_characters(&self) -> (&str, &str) {
+        match self.theme {
+            Theme::Spinner
+            | Theme::Claude
+            | Theme::Pacman
+            | Theme::DualColor(..)
+            | Theme::Gradient(..) => ("", ""),
+            _ => ("|", "|"),
+        }
+    }
+
+    /// Formats the progress percentage and item counts
+    fn format_stats(&self) -> String {
+        if matches!(self.theme, Theme::Spinner | Theme::Claude) {
+            return String::new();
+        }
+
+        let percent = if self.total == 0 {
+            1.0
+        } else {
+            self.current as f64 / self.total as f64
+        };
+
+        format!(
+            " {:>3}% [{}/{}]",
+            (percent * 100.0) as usize,
+            self.current,
+            self.total
+        )
+    }
+
+    /// Generates ANSI escape codes for multi-bar vertical movement
+    fn get_vertical_movement(&self) -> (String, String) {
+        if self.offset > 0 {
+            (
+                format!("\x1b[{}A", self.offset),
+                format!("\x1b[{}B", self.offset),
+            )
+        } else {
+            (String::new(), String::new())
+        }
+    }
+
+    /// Handles description prefix and final message/error suffix
+    fn compute_prefix_and_suffix(&self) -> (String, String) {
+        let prefix = if self.desc.is_empty() {
+            String::new()
+        } else {
+            format!("{}: ", self.desc)
+        };
+
+        let msg = self.final_message.as_deref().unwrap_or("");
+        let suffix = match self.status {
+            Status::Failure if !msg.is_empty() => format!(" - Error: {}", msg),
+            _ if !msg.is_empty() => format!(" - {}", msg),
+            _ => String::new(),
+        };
+
+        (prefix, suffix)
+    }
+
     pub(crate) fn clear_line(&self) {
         // \r moves to start, \x1b[K clears from cursor to end of line
         print!("\r\x1b[K");
@@ -78,81 +140,30 @@ impl SharedState {
 
     pub(crate) fn print(&self) {
         if !self.is_terminal {
-            // If we aren't in a TTY, don't print anything during increments.
-            // This prevents the log file from being filled with thousands of lines.
+            // If we aren't in a terminal, don't print anything during increments.
+            // This prevents the log file from being filled with unnecessary garbage.
             return;
         }
 
-        let (left, right) = match self.theme {
-            Theme::Spinner
-            | Theme::Claude
-            | Theme::Pacman
-            | Theme::DualColor(..)
-            | Theme::Gradient(..) => ("", ""),
-            _ => ("|", "|"),
-        };
-
-        let percent = if self.total == 0 {
-            1.0
-        } else {
-            self.current as f64 / self.total as f64
-        };
-
-        // Standard stats (Percent and Count)
-        let stats = match self.theme {
-            Theme::Spinner | Theme::Claude => String::new(),
-            _ => format!(
-                " {:>3}% [{}/{}]",
-                (percent * 100.0) as usize,
-                self.current,
-                self.total
-            ),
-        };
-
         let mut bar_string = self.theme.render(self.width, self.current, self.total);
-
-        // Apply state-based coloring
         bar_string = match self.status {
             Status::Success => format!("\x1b[32m{}\x1b[0m", bar_string), // Green
             Status::Failure => format!("\x1b[31m{}\x1b[0m", bar_string), // Red
             Status::Running => bar_string,
         };
 
-        let msg = self.final_message.as_deref().unwrap_or("");
-        let prefix = if self.desc.is_empty() {
-            String::new()
-        } else {
-            format!("{}: ", self.desc)
-        };
-
-        // If failed, we might want to show the error message after the bar
-        let suffix = if self.status == Status::Failure && !msg.is_empty() {
-            format!(" - Error: {}", msg)
-        } else if !msg.is_empty() {
-            format!(" - {}", msg)
-        } else {
-            String::new()
-        };
-
-        let move_up = if self.offset > 0 {
-            format!("\x1b[{}A", self.offset)
-        } else {
-            String::new()
-        };
-
-        let move_down = if self.offset > 0 {
-            format!("\x1b[{}B", self.offset)
-        } else {
-            String::new()
-        };
+        let (left_boundary_character, right_boundary_character) = self.get_boundary_characters();
+        let (move_up, move_down) = self.get_vertical_movement();
+        let stats = self.format_stats();
+        let (prefix, suffix) = self.compute_prefix_and_suffix();
 
         print!(
             "\r{}{}{}{}{}{}{}{}\x1b[K{}",
             move_up,
             prefix,
-            left,
+            left_boundary_character,
             bar_string,
-            right,
+            right_boundary_character,
             stats,
             self.compute_eta(),
             suffix,
