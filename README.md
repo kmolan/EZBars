@@ -22,13 +22,13 @@ A lightweight, highly customizable, and thread-safe-ready CLI progress bar for R
 
 ---
 
-![style demo](./assets/style_demo.gif)
-
 ## Quick Start
 
 Making progress bars are ez-pz!
 
 ```rust
+use ezbars::ProgressIterator;
+
 let pb = ProgressBar::new();
 
 for item in pb.wrap(0..100) {
@@ -51,6 +51,8 @@ for iter in 0..500 {
 You can fully customize the look and feel of the progress bar before the loop starts by chaining the builder methods.
 
 ```rust
+use ezbars::{MultiProgress, ProgressBar, Style};
+
 // Fully configure using the Builder Pattern
 let pb = ProgressBar::new()
     .total(1000)                   // Define the target completion value (optional)
@@ -64,47 +66,50 @@ let pb = ProgressBar::new()
 Update the bar on the fly!
 
 ```rust
-    let pb = ProgressBar::new();
+use ezbars::{MultiProgress, ProgressBar, Style};
 
-    for i in 1..=100 {
-        if i == 25 { // Change the prefix text
-            pb.set_description("Loading Assets...");
-        }
-
-        // Change metadata (like filenames or status) after the statistics
-        if i == 50 {
-            pb.set_postfix("Working on: metadata.json");
-        }
-
-        // Instead of incrementing, you can snap the bar to a specific value
-        if i == 75 {
-            pb.set_position(90); // Jump directly to 90%
-        }
-        else{
-            // You can also manually increment to whatever value you want
-            pb.manually_increment(1);
-            // pb.manually_increment(5);
-            // pb.manually_increment(10);
-        }
-
-        if failure_condition()
-        {
-            // Failure Termination
-            // Stops the bar, colors it RED, and displays a final message
-            pb.finish_with_failure("Connection Lost!");
-            return;
-        }
-
-        thread::sleep(Duration::from_millis(50));
+let pb = ProgressBar::new();
+for i in 1..=100 {
+    if i == 25 { // Change the prefix text
+        pb.set_description("Loading Assets...");
     }
 
-    // Success Termination
-    // Finishes the bar, colors it Green, and displays a final message
-    pb.finish_with_message("Deployment Successful!");
+    // Change metadata (like filenames or status) after the statistics
+    if i == 50 {
+        pb.set_postfix("Working on: metadata.json");
+    }
+
+    // Instead of incrementing, you can snap the bar to a specific value
+    if i == 75 {
+        pb.set_position(90); // Jump directly to 90%
+    }
+    else{
+        // You can also manually increment to whatever value you want
+        pb.manually_increment(1);
+        // pb.manually_increment(5);
+        // pb.manually_increment(10);
+    }
+
+    if failure_condition()
+    {
+        // Failure Termination
+        // Stops the bar, colors it RED, and displays a final message
+        pb.finish_with_failure("Connection Lost!");
+        return;
+    }
+
+    thread::sleep(Duration::from_millis(50));
+}
+
+// Success Termination
+// Finishes the bar, colors it Green, and displays a final message
+pb.finish_with_message("Deployment Successful!");
 ```
 
 ## List of styles
-By default, EZBars uses the `Fractional` style for a smooth classic feel. To see all a showcase of all style options, run `cargo run --example style_showcase`. Consult the gif above to see them in action! This list will keep growing based on user feedback, so check back often! Many of these styles are also user-configurable for a personal feel.
+By default, EZBars uses the `Fractional` style for a smooth classic feel. To see all a showcase of all style options, run `cargo run --example style_showcase`. This list will keep growing based on user feedback, so check back often! Many of these styles are also user-configurable for a personal feel.
+
+![style demo](./assets/style_demo.gif)
 
 ```rust
 /// [████---] | Deterministic | Fixed-character block bar. Parameters: (filled_char, empty_char)
