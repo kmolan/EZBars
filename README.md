@@ -157,7 +157,3 @@ fn main() {
 - Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
 
 - Pause/Resume: Methods to temporarily stop the timer and stop the animation if the program needs to wait for user input or an external event.
-
-- Pulse/Shimmer Effect: For gradients, add an animation where a "light" pass travels across the bar (like a loading shine on a glass button).
-
-- Braille Sparkline: For the stats area, show a small "history" of the speed over the last 10 seconds using Braille characters to represent a graph.
