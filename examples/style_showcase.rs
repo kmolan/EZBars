@@ -41,14 +41,14 @@ fn main() {
             .width(width)
             .style(style)
             .desc(desc)
-            .total(iters);
+            .set_total_capacity(iters);
         
         active_bars.push(multi.add(pb));
     }
 
     for _ in 0..total_iterations {
         for pb in &active_bars {
-            pb.inc(1); 
+            pb.manually_increment(1); 
         }
 
         thread::sleep(Duration::from_millis(100));

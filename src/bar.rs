@@ -14,19 +14,53 @@ pub enum Status {
 }
 
 pub(crate) struct SharedState {
+    /// The target value representing 100% completion.
+    /// Used as the denominator for percentage and progress bar scaling.
     pub(crate) total: usize,
+
+    /// The current progress value. Incremented via `manually_increment()` or set via `set_position()`.
     pub(crate) current: usize,
+
+    /// The horizontal length of the progress bar itself (excluding labels and stats),
+    /// measured in terminal columns.
     pub(crate) width: usize,
+
+    /// The active visual style (e.g., Fractional, Gradient, Propulsion).
+    /// Determines the logic used in the `render` function.
     pub(crate) style: Style,
+
+    /// The prefix text displayed to the left of the progress bar.
     pub(crate) desc: String,
+
+    /// Extra metadata or status text appended to the far right of the statistics line.
     pub(crate) postfix: String,
+
+    /// Captured when the first increment occurs. Used to calculate elapsed time,
+    /// iterations per second, and ETA.
     pub(crate) start_time: Option<Instant>,
-    pub(crate) clear_on_finish: bool,
+
+    /// Configuration flag: If true, the bar is erased from the terminal via ANSI
+    /// escape codes upon reaching a finished state.
+    pub(crate) vanish_on_finish: bool,
+
+    /// The current lifecycle phase of the bar (Running, Success, or Failure).
     pub(crate) status: Status,
+
+    /// An optional string stored upon completion (success or error) to be
+    /// displayed as the final status message.
     pub(crate) final_message: Option<String>,
-    pub(crate) offset: usize, // Vertical distance from the bottom line
+
+    /// The vertical line offset used by the `MultiProgress` manager.
+    /// Represents how many lines "up" the cursor must jump to redraw this specific bar.
+    pub(crate) offset: usize,
+
+    /// Detection flag: `true` if outputting to a terminal, `false` if
+    /// piped to a file or null device. Used to suppress clutter in logs.
     pub(crate) is_terminal: bool,
-    pub(crate) smoothed_speed: f64, // Persisted EMA speed
+
+    /// The current speed (it/s) after applying the Exponential Moving Average (EMA).
+    /// This persists across updates to ensure a jitter-free, stable ETA display.
+    pub(crate) smoothed_speed: f64,
 }
 
 impl SharedState {
@@ -206,7 +240,7 @@ impl ProgressBar {
                 desc: String::new(),
                 postfix: String::new(),
                 start_time: None,
-                clear_on_finish: false,
+                vanish_on_finish: false,
                 status: Status::Running,
                 final_message: None,
                 offset: 0,
@@ -222,34 +256,41 @@ impl ProgressBar {
         self
     }
 
+    /// Sets the visual theme (from enum Style)
     pub fn style(self, style: Style) -> Self {
         self.state.borrow_mut().style = style;
         self
     }
 
+    /// Sets the initial description prefix.
     pub fn desc<S: Into<String>>(self, desc: S) -> Self {
         self.state.borrow_mut().desc = desc.into();
         self
     }
 
+    /// Updates the description prefix text while the bar is active.
     pub fn set_description<S: Into<String>>(&self, desc: S) {
         self.state.borrow_mut().desc = desc.into();
     }
 
+    /// Appends extra data or metadata to the end of the statistics line.
     pub fn set_postfix<S: Into<String>>(&self, postfix: S) {
         self.state.borrow_mut().postfix = postfix.into();
     }
 
-    pub fn clear_on_finish(self, clear: bool) -> Self {
-        self.state.borrow_mut().clear_on_finish = clear;
+    /// If set, the bar will automatically vanish from the terminal line upon finishing.
+    pub fn vanish_on_finish(self, clear: bool) -> Self {
+        self.state.borrow_mut().vanish_on_finish = clear;
         self
     }
 
+    /// Manually clears the current progress bar line from the terminal.
     pub fn finish_and_clear(&self) {
         self.state.borrow_mut().clear_line();
     }
 
-    pub fn finish_with_message(&self, msg: &str) {
+    /// Marks the task as successful, snaps progress to 100%, and prints the final message.
+    pub fn finish_with_success(&self, msg: &str) {
         let mut state = self.state.borrow_mut();
         state.status = Status::Success;
         state.current = state.total;
@@ -258,11 +299,13 @@ impl ProgressBar {
         if state.is_terminal {
             state.print();
         } else {
+            // Clean log output for non-terminal environments
             println!("{}: [SUCCESS] {}", state.desc, msg);
         }
     }
 
-    pub fn abandon(&self, msg: &str) {
+    /// Marks the task as failed and prints an error message.
+    pub fn finish_with_failure(&self, msg: &str) {
         let mut state = self.state.borrow_mut();
         state.status = Status::Failure;
         state.final_message = Some(msg.to_string());
@@ -270,16 +313,20 @@ impl ProgressBar {
         if state.is_terminal {
             state.print();
         } else {
+            // Clean log output for non-terminal environments
             println!("{}: [FAILURE] {}", state.desc, msg);
         }
     }
 
-    pub fn total(self, total: usize) -> Self {
+    /// Manually sets the total capacity for deterministic bars
+    pub fn set_total_capacity(self, total: usize) -> Self {
         self.state.borrow_mut().total = total;
         self
     }
 
-    pub fn inc(&self, amount: usize) {
+    /// Increments current progress by a specific amount.
+    /// Automatically starts the timer on the first call.
+    pub fn manually_increment(&self, amount: usize) {
         let mut state = self.state.borrow_mut();
 
         if state.start_time.is_none() {
@@ -290,12 +337,14 @@ impl ProgressBar {
         state.print();
     }
 
+    /// Explicitly sets the current progress position.
     pub fn set_position(&self, pos: usize) {
         let mut state = self.state.borrow_mut();
         state.current = pos.min(state.total);
         state.print();
     }
 
+    /// Wraps any ExactSizeIterator to automate progress tracking.
     pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter>
     where
         I::IntoIter: ExactSizeIterator,

@@ -40,7 +40,7 @@ for iter in 0..500 {
     // ... perform complex logic ...
 
     // Manually increment by 1 (or any amount)
-    pb.inc(1);
+    pb.manually_increment(1);
 }
 ```
 
@@ -159,7 +159,7 @@ fn main() {
 - Thread-safe shared state management
 - Unicode-safe character handling for multi-byte emojis and symbols
 - Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
-- Success/Failure States: Add a .finish_with_message("Done!") or .abandon() method that changes the bar color to green (success) or red (error) once the loop ends.
+- Success/Failure States: Add a .finish_with_success("Done!") or .finish_with_failure() method that changes the bar color to green (success) or red (error) once the loop ends.
 - Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
 - No-terminal Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
 - Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.

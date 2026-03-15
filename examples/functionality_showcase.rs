@@ -8,7 +8,7 @@ fn success_bar() {
     for _ in pb.wrap(0..100) {
         thread::sleep(Duration::from_millis(20));
     }
-    pb.finish_with_message("Migration Successful!");
+    pb.finish_with_success("Migration Successful!");
 }
 
 fn failed_bar() {
@@ -16,7 +16,7 @@ fn failed_bar() {
 
     for i in pb.wrap(0..100) {
         if i == 90 {
-            pb.abandon("Connection Lost!");
+            pb.finish_with_failure("Connection Lost!");
             return;
         }
         thread::sleep(Duration::from_millis(20));
@@ -29,41 +29,41 @@ fn multiple_bars() {
     let mut multi = MultiProgress::new();
 
     // 1. A sleek ModernSlim bar for a "System Scan"
-    let pb1 = multi.add(ProgressBar::new().total(100).style(Style::ModernSlim("#00FF00".into(), "#222222".into())).desc("Core Scan"));
+    let pb1 = multi.add(ProgressBar::new().set_total_capacity(100).style(Style::ModernSlim("#00FF00".into(), "#222222".into())).desc("Core Scan"));
 
     // 2. A Classic ASCII bar for "Network Sync"
-    let pb2 = multi.add(ProgressBar::new().total(100).style(Style::Classic('█', '░')).desc("Net Sync"));
+    let pb2 = multi.add(ProgressBar::new().set_total_capacity(100).style(Style::Classic('█', '░')).desc("Net Sync"));
 
     // 3. A Rocket bar just for the flair
-    let pb3 = multi.add(ProgressBar::new().total(100).style(Style::VerticalFill).desc("Delivery") );
+    let pb3 = multi.add(ProgressBar::new().set_total_capacity(100).style(Style::VerticalFill).desc("Delivery") );
 
     // Run a loop for 100 iterations
     for i in 1..=100 {
         // Core Scan is fast and reliable
-        if i <= 100 { pb1.inc(1); }
+        if i <= 100 { pb1.manually_increment(1); }
         
-        // Net Sync is a bit slower (stops at 60 due to abandonment)
-        if i % 2 == 0 && i <= 60 { pb2.inc(1); }
+        // Net Sync is a bit slower (stops at 60 due to finish_with_failurement)
+        if i % 2 == 0 && i <= 60 { pb2.manually_increment(1); }
         
         // Rocket is constant 2x speed
-        pb3.inc(2);
+        pb3.manually_increment(2);
 
         std::thread::sleep(std::time::Duration::from_millis(40));
 
         // Mid-way failure simulation for the Network Sync
         if i == 60 {
-            pb2.abandon("Connection Timed Out!");
+            pb2.finish_with_failure("Connection Timed Out!");
         }
     }
 
     // Finalize the healthy ones
-    pb1.finish_with_message("All systems green!");
-    pb3.finish_with_message("Package landed!");
+    pb1.finish_with_success("All systems green!");
+    pb3.finish_with_success("Package landed!");
 }
 
 fn otf_updates() {
     let pb = ProgressBar::new()
-        .total(100)
+        .set_total_capacity(100)
         .style(Style::Gradient("#FF00FF".into(), "#00FFFF".into()))
         .desc("Initializing...");
 
@@ -80,12 +80,12 @@ fn otf_updates() {
         }
 
         // 3. Increment the bar
-        pb.inc(1);
+        pb.manually_increment(1);
 
         thread::sleep(Duration::from_millis(50));
     }
 
-    pb.finish_with_message("Process Complete!");
+    pb.finish_with_success("Process Complete!");
 }
 
 fn main() {
@@ -105,7 +105,7 @@ fn main() {
     let pb_ghost = ProgressBar::new()
         .style(Style::Marquee("#FF0000".into(), "#444444".into()))
         .desc("Loading...")
-        .clear_on_finish(true);
+        .vanish_on_finish(true);
     for _ in pb_ghost.wrap(0..20) {
         thread::sleep(Duration::from_millis(100));
     }

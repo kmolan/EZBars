@@ -28,7 +28,7 @@ where
             state.print();
         } else {
             // We reached the end of the progress bar
-            if state.clear_on_finish {
+            if state.vanish_on_finish {
                 state.clear_line();
             }
         }
