@@ -1,4 +1,6 @@
 # EZBars
+[![On crates.io](https://img.shields.io/crates/v/ezbars.svg)](https://crates.io/crates/ezbars)
+![Downloads](https://img.shields.io/crates/d/ezbars?style=flat-square)
 ![github](https://github.com/kmolan/EZBars/actions/workflows/build-tests.yml/badge.svg)
 ![github](https://github.com/kmolan/EZBars/actions/workflows/code-coverage.yml/badge.svg)
 
@@ -34,8 +36,7 @@ for item in pb.wrap(0..100) {
     std::thread::sleep(std::time::Duration::from_millis(30));
 }
 
-//Alternatiely, manually increment while doing work
-
+//Alternatively, manually increment while doing work
 let pb2 = ProgressBar::new();
 for iter in 0..500 {
     // ... perform complex logic ...
@@ -66,8 +67,7 @@ Update the bar on the fly!
     let pb = ProgressBar::new();
 
     for i in 1..=100 {
-        // Change the prefix text
-        if i == 25 {
+        if i == 25 { // Change the prefix text
             pb.set_description("Loading Assets...");
         }
 
