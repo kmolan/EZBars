@@ -26,8 +26,12 @@ where
         if item.is_some() {
             state.current += 1;
             state.print();
-        } else {
-            println!(); 
+        } else { // We reached the end of the progress bar
+            if state.clear_on_finish {
+                state.clear_line();
+            } else {
+                println!(); // Just move to the next line so bar can persist
+            }
         }
 
         item

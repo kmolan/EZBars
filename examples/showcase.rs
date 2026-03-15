@@ -20,13 +20,28 @@ fn main() {
         (Theme::Rocket, "Rocket", 30, 100),
         (Theme::FishBounce, "FishBounce", 30, 50),
         (Theme::DotWaves, "DotWaves", 30, 50),
-        (Theme::Banner(" Custom text here ".to_string()), "Banner", 30, 100),
+        (Theme::Banner("  Custom text here  ".to_string()), "Banner", 30, 100),
         (Theme::NyanCat, "NyanCat", 30, 60),
         (Theme::Gradient("#FF00FF".into(), "#00FFFF".into()), "Gradient", 30, 50),
         (Theme::DualColor("#FF0000".into(), "#444444".into()), "DualColor", 30, 50)
     ];
 
-    // 2. Loop through the list once
+    let pb_persist = ProgressBar::new()
+        .desc("Permanent")
+        .clear_on_finish(false); 
+    for _ in pb_persist.wrap(0..20) { thread::sleep(Duration::from_millis(100)); }
+
+    print!("\n");
+
+    // This bar will vanish completely after finishing
+    let pb_ghost = ProgressBar::new()
+        .desc("Ghost Bar")
+        .clear_on_finish(true);
+    for _ in pb_ghost.wrap(0..20) { thread::sleep(Duration::from_millis(100)); }
+
+    print!("\n");
+
+
     for (_, (theme, desc, width, iters)) in showcase_items.into_iter().enumerate() {
         let pb = ProgressBar::new()
             .width(width)

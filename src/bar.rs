@@ -14,6 +14,7 @@ pub(crate) struct SharedState {
     pub(crate) desc: String,
     pub(crate) postfix: String,
     pub(crate) start_time: Option<Instant>,
+    pub(crate) clear_on_finish: bool,
 }
 
 impl SharedState {
@@ -23,6 +24,12 @@ impl SharedState {
         let mins = total_secs / 60;
         let secs = total_secs % 60;
         format!("{:02}:{:02}", mins, secs)
+    }
+
+    pub(crate) fn clear_line(&self) {
+        // \r moves to start, \x1b[K clears from cursor to end of line
+        print!("\r\x1b[K");
+        let _ = std::io::stdout().flush();
     }
 
     pub(crate) fn print(&self) {
@@ -102,6 +109,7 @@ impl ProgressBar {
                 desc: String::new(),
                 postfix: String::new(),
                 start_time: None,
+                clear_on_finish: false, // Default to persist
             })),
         }
     }
@@ -132,6 +140,17 @@ impl ProgressBar {
 
     pub fn write<S: AsRef<str>>(&self, msg: S) {
         self.state.borrow().write(msg.as_ref());
+    }
+
+    /// Configuration: Should the bar disappear when finished?
+    pub fn clear_on_finish(self, clear: bool) -> Self {
+        self.state.borrow_mut().clear_on_finish = clear;
+        self
+    }
+
+    /// Manual trigger to hide/clear the bar
+    pub fn finish_and_clear(&self) {
+        self.state.borrow_mut().clear_line();
     }
 
     pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter> 

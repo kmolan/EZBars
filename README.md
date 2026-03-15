@@ -144,8 +144,10 @@ fn main() {
 - Intelligent bracket logic that adapts to the chosen theme
 - Thread-safe shared state management
 - Unicode-safe character handling for multi-byte emojis and symbols
+- Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
 
-## TODOP
+
+## TODO
 
 - No-TTY Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
 
@@ -153,8 +155,6 @@ fn main() {
   "{desc} {bar} {percentage} | {eta}".
 
 - Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
-
-- Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
 
 - Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
 
