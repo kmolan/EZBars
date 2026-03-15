@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use crate::iter::ProgressBarIter;
-use crate::theme::Theme;
+use crate::style::Style;
 
 #[derive(Clone, PartialEq)]
 pub enum Status {
@@ -17,7 +17,7 @@ pub(crate) struct SharedState {
     pub(crate) total: usize,
     pub(crate) current: usize,
     pub(crate) width: usize,
-    pub(crate) theme: Theme,
+    pub(crate) style: Style,
     pub(crate) desc: String,
     pub(crate) postfix: String,
     pub(crate) start_time: Option<Instant>,
@@ -83,15 +83,15 @@ impl SharedState {
         time_info
     }
 
-    /// Determines the boundary characters based on the current theme
+    /// Determines the boundary characters based on the current style
     fn get_boundary_characters(&self) -> (&str, &str) {
-        match self.theme {
-            Theme::AsciiSpinner
-            | Theme::BrailleSpinner
-            | Theme::Pacman
-            | Theme::ModernSlim(..)
-            | Theme::Gradient(..)
-            | Theme::Marquee(..) => ("", ""),
+        match self.style {
+            Style::AsciiSpinner
+            | Style::BrailleSpinner
+            | Style::Pacman
+            | Style::ModernSlim(..)
+            | Style::Gradient(..)
+            | Style::Marquee(..) => ("", ""),
             _ => ("|", "|"),
         }
     }
@@ -153,7 +153,7 @@ impl SharedState {
         }
 
         let eta_info = self.compute_eta(); // Updates smoothed_speed internally
-        let mut bar_string = self.theme.render(self.width, self.current, self.total);
+        let mut bar_string = self.style.render(self.width, self.current, self.total);
         bar_string = match self.status {
             Status::Success => format!("\x1b[32m{}\x1b[0m", bar_string), // Green
             Status::Failure => format!("\x1b[31m{}\x1b[0m", bar_string), // Red
@@ -194,13 +194,15 @@ impl Default for ProgressBar {
 }
 
 impl ProgressBar {
+    /// Initializes a new ProgressBar with default settings:
+    /// 40-character width, Fractional style, and no initial total.
     pub fn new() -> Self {
         Self {
             state: Rc::new(RefCell::new(SharedState {
                 total: 0,
                 current: 0,
                 width: 40,
-                theme: Theme::default(),
+                style: Style::default(),
                 desc: String::new(),
                 postfix: String::new(),
                 start_time: None,
@@ -214,13 +216,14 @@ impl ProgressBar {
         }
     }
 
+    /// Sets the horizontal width of the bar (in terminal columns).
     pub fn width(self, width: usize) -> Self {
         self.state.borrow_mut().width = width;
         self
     }
 
-    pub fn theme(self, theme: Theme) -> Self {
-        self.state.borrow_mut().theme = theme;
+    pub fn style(self, style: Style) -> Self {
+        self.state.borrow_mut().style = style;
         self
     }
 

@@ -1,12 +1,12 @@
 pub mod bar;
 pub mod iter;
 pub mod multi;
-pub mod theme;
+pub mod style;
 
 pub use bar::ProgressBar;
 pub use iter::{ProgressBarIter, ProgressIterator};
 pub use multi::MultiProgress;
-pub use theme::Theme;
+pub use style::Style;
 
 pub fn tqdm<I: IntoIterator>(iterable: I) -> ProgressBarIter<I::IntoIter>
 where

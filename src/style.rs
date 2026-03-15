@@ -1,5 +1,5 @@
 #[derive(Clone, Default)]
-pub enum Theme {
+pub enum Style {
     /// [████------] | Deterministic | Fixed-character block bar.
     /// Parameters: (filled_char, empty_char)
     Classic(char, char),
@@ -70,7 +70,7 @@ pub enum Theme {
     NyanCat,
 }
 
-impl Theme {
+impl Style {
     fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
         let hex = hex.trim_start_matches('#');
 
@@ -81,10 +81,10 @@ impl Theme {
         (r, g, b)
     }
 
-    /// Renders the visual portion of the progress bar based on the active theme
+    /// Renders the visual portion of the progress bar based on the active style
     pub fn render(&self, width: usize, current: usize, total: usize) -> String {
         match self {
-            Theme::Classic(fill, empty) => {
+            Style::Classic(fill, empty) => {
                 let percent = if total == 0 {
                     1.0
                 } else {
@@ -100,7 +100,7 @@ impl Theme {
                 )
             }
 
-            Theme::Fractional => {
+            Style::Fractional => {
                 let percent = if total == 0 {
                     1.0
                 } else {
@@ -124,21 +124,21 @@ impl Theme {
                 bar
             }
 
-            Theme::AsciiSpinner => {
+            Style::AsciiSpinner => {
                 let chars = ['|', '/', '-', '\\'];
                 let c = chars[current % chars.len()];
                 let padding = width.saturating_sub(2);
                 format!("{} {}", c, " ".repeat(padding))
             }
 
-            Theme::BrailleSpinner => {
+            Style::BrailleSpinner => {
                 let chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
                 let c = chars[current % chars.len()];
                 let padding = width.saturating_sub(2);
                 format!("{} {}", c, " ".repeat(padding))
             }
 
-            Theme::Bouncing(block_width, fill, empty) => {
+            Style::Bouncing(block_width, fill, empty) => {
                 if width <= *block_width {
                     return fill.to_string().repeat(width);
                 }
@@ -159,7 +159,7 @@ impl Theme {
                 format!("{}{}{}", left_empty, block, right_empty)
             }
 
-            Theme::Pacman => {
+            Style::Pacman => {
                 let percent = if total == 0 {
                     0.0
                 } else {
@@ -176,7 +176,7 @@ impl Theme {
                 format!("{}{}{}", eaten, mouth, food)
             }
 
-            Theme::EKG => {
+            Style::EKG => {
                 let percent = if total == 0 {
                     0.0
                 } else {
@@ -211,7 +211,7 @@ impl Theme {
                 line.chars().take(width).collect()
             }
 
-            Theme::DVD => {
+            Style::DVD => {
                 let logo = "DVD";
                 let logo_len = logo.len();
 
@@ -234,7 +234,7 @@ impl Theme {
                 format!("{}{}{}", left_pad, logo, right_pad)
             }
 
-            Theme::WaterLevel => {
+            Style::WaterLevel => {
                 // Fills from bottom-up using vertical blocks
                 let levels = [' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
                 let percent = if total == 0 {
@@ -246,7 +246,7 @@ impl Theme {
                 levels[idx].to_string().repeat(width)
             }
 
-            Theme::Fish => {
+            Style::Fish => {
                 let fish_chars: Vec<char> = "><(((°>".chars().collect();
                 let fish_len = fish_chars.len();
 
@@ -274,7 +274,7 @@ impl Theme {
                 res
             }
 
-            Theme::Waves => {
+            Style::Waves => {
                 let wave_chars: Vec<char> = "▁▅▇██▇▅▁".chars().collect();
                 let n = wave_chars.len();
                 let mut res = String::with_capacity(width);
@@ -288,7 +288,7 @@ impl Theme {
                 res
             }
 
-            Theme::VerticalFill => {
+            Style::VerticalFill => {
                 let levels = [' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
                 let percent = if total == 0 {
                     0.0
@@ -323,7 +323,7 @@ impl Theme {
                 bar
             }
 
-            Theme::Arrows => {
+            Style::Arrows => {
                 let percent = if total == 0 {
                     0.0
                 } else {
@@ -338,7 +338,7 @@ impl Theme {
                 bar
             }
 
-            Theme::Rocket => {
+            Style::Rocket => {
                 let percent = if total == 0 {
                     0.0
                 } else {
@@ -375,7 +375,7 @@ impl Theme {
                 bar
             }
 
-            Theme::FishBounce => {
+            Style::FishBounce => {
                 let fish_chars: Vec<char> = "><(((°>".chars().collect();
                 let fish_len = fish_chars.len();
                 let travel_dist = width.saturating_sub(fish_len);
@@ -406,7 +406,7 @@ impl Theme {
                 )
             }
 
-            Theme::DotWaves => {
+            Style::DotWaves => {
                 let dots: Vec<char> = "⠁⠈⠐⠠⢀⡀⠄⠂".chars().collect();
                 let mut res = String::with_capacity(width * 3); // Braille is 3 bytes
                 for i in 0..width {
@@ -417,7 +417,7 @@ impl Theme {
                 res
             }
 
-            Theme::TextTicker(text) => {
+            Style::TextTicker(text) => {
                 let text_chars: Vec<char> = text.chars().collect();
                 let n = text_chars.len();
                 let mut res = String::with_capacity(width);
@@ -430,7 +430,7 @@ impl Theme {
                 res
             }
 
-            Theme::NyanCat => {
+            Style::NyanCat => {
                 let cat = "🐱";
                 let percent = if total == 0 {
                     0.0
@@ -464,7 +464,7 @@ impl Theme {
                 )
             }
 
-            Theme::Gradient(start_hex, end_hex) => {
+            Style::Gradient(start_hex, end_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(start_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(end_hex);
 
@@ -491,7 +491,7 @@ impl Theme {
                 bar
             }
 
-            Theme::ModernSlim(fill_hex, empty_hex) => {
+            Style::ModernSlim(fill_hex, empty_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(fill_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(empty_hex);
 
@@ -520,7 +520,7 @@ impl Theme {
                 bar
             }
 
-            Theme::Marquee(color1_hex, color2_hex) => {
+            Style::Marquee(color1_hex, color2_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(color1_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(color2_hex);
 

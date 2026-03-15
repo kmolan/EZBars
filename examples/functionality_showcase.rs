@@ -1,4 +1,4 @@
-use ezbars::{MultiProgress, ProgressBar, Theme};
+use ezbars::{MultiProgress, ProgressBar, Style};
 use std::thread;
 use std::time::Duration;
 
@@ -29,13 +29,13 @@ fn multiple_bars() {
     let mut multi = MultiProgress::new();
 
     // 1. A sleek ModernSlim bar for a "System Scan"
-    let pb1 = multi.add(ProgressBar::new().total(100).theme(Theme::ModernSlim("#00FF00".into(), "#222222".into())).desc("Core Scan"));
+    let pb1 = multi.add(ProgressBar::new().total(100).style(Style::ModernSlim("#00FF00".into(), "#222222".into())).desc("Core Scan"));
 
     // 2. A Classic ASCII bar for "Network Sync"
-    let pb2 = multi.add(ProgressBar::new().total(100).theme(Theme::Classic('█', '░')).desc("Net Sync"));
+    let pb2 = multi.add(ProgressBar::new().total(100).style(Style::Classic('█', '░')).desc("Net Sync"));
 
     // 3. A Rocket bar just for the flair
-    let pb3 = multi.add(ProgressBar::new().total(100).theme(Theme::VerticalFill).desc("Delivery") );
+    let pb3 = multi.add(ProgressBar::new().total(100).style(Style::VerticalFill).desc("Delivery") );
 
     // Run a loop for 100 iterations
     for i in 1..=100 {
@@ -64,7 +64,7 @@ fn multiple_bars() {
 fn otf_updates() {
     let pb = ProgressBar::new()
         .total(100)
-        .theme(Theme::Gradient("#FF00FF".into(), "#00FFFF".into()))
+        .style(Style::Gradient("#FF00FF".into(), "#00FFFF".into()))
         .desc("Initializing...");
 
     for i in 0..=100 {
@@ -103,7 +103,7 @@ fn main() {
 
     println!("\n\nProgress bars can VANISH after they're done!");
     let pb_ghost = ProgressBar::new()
-        .theme(Theme::Marquee("#FF0000".into(), "#444444".into()))
+        .style(Style::Marquee("#FF0000".into(), "#444444".into()))
         .desc("Loading...")
         .clear_on_finish(true);
     for _ in pb_ghost.wrap(0..20) {

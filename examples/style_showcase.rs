@@ -1,4 +1,4 @@
-use ezbars::{MultiProgress, ProgressBar, Theme};
+use ezbars::{MultiProgress, ProgressBar, Style};
 use std::thread;
 use std::time::Duration;
 
@@ -13,33 +13,33 @@ fn main() {
 
     // Format: (Enum, Description, Width, Iterations)
     let showcase_items = vec![
-        (Theme::Fractional, "Fractional", 30, total_iterations),
-        (Theme::VerticalFill, "VerticalFill", 30, total_iterations),
-        (Theme::Bouncing(4, '█', ' '), "Bouncing", 30, total_iterations),
-        (Theme::Gradient("#FF00FF".into(), "#00FFFF".into()), "Gradient", 30, total_iterations),
-        (Theme::ModernSlim("#FF0000".into(), "#444444".into()), "ModernSlim", 30, total_iterations),
-        (Theme::Marquee("#FF0000".into(), "#444444".into()), "Marquee", 30, total_iterations),
-        (Theme::AsciiSpinner, "AsciiSpinner", 10, total_iterations),
-        (Theme::BrailleSpinner, "BrailleSpinner", 10, total_iterations),
-        (Theme::TextTicker("  Custom text here  ".to_string()), "TextTicker", 30, total_iterations),
-        (Theme::DVD, "DVD", 20, total_iterations),
-        (Theme::Pacman, "Pacman", 20, total_iterations),
-        (Theme::EKG, "EKG", 20, total_iterations),
-        (Theme::WaterLevel, "WaterLevel", 30, total_iterations),
-        (Theme::Fish, "Fish", 30, total_iterations),
-        (Theme::Waves, "Waves", 30, total_iterations),
-        (Theme::Arrows, "Arrows", 30, total_iterations),
-        (Theme::Rocket, "Rocket", 30, total_iterations),
-        (Theme::FishBounce, "FishBounce", 30, total_iterations),
-        (Theme::DotWaves, "DotWaves", 30, total_iterations),
-        (Theme::NyanCat, "NyanCat", 30, total_iterations),
+        (Style::Fractional, "Fractional", 30, total_iterations),
+        (Style::VerticalFill, "VerticalFill", 30, total_iterations),
+        (Style::Bouncing(4, '█', ' '), "Bouncing", 30, total_iterations),
+        (Style::Gradient("#FF00FF".into(), "#00FFFF".into()), "Gradient", 30, total_iterations),
+        (Style::ModernSlim("#FF0000".into(), "#444444".into()), "ModernSlim", 30, total_iterations),
+        (Style::Marquee("#FF0000".into(), "#444444".into()), "Marquee", 30, total_iterations),
+        (Style::AsciiSpinner, "AsciiSpinner", 10, total_iterations),
+        (Style::BrailleSpinner, "BrailleSpinner", 10, total_iterations),
+        (Style::TextTicker("  Custom text here  ".to_string()), "TextTicker", 30, total_iterations),
+        (Style::DVD, "DVD", 20, total_iterations),
+        (Style::Pacman, "Pacman", 20, total_iterations),
+        (Style::EKG, "EKG", 20, total_iterations),
+        (Style::WaterLevel, "WaterLevel", 30, total_iterations),
+        (Style::Fish, "Fish", 30, total_iterations),
+        (Style::Waves, "Waves", 30, total_iterations),
+        (Style::Arrows, "Arrows", 30, total_iterations),
+        (Style::Rocket, "Rocket", 30, total_iterations),
+        (Style::FishBounce, "FishBounce", 30, total_iterations),
+        (Style::DotWaves, "DotWaves", 30, total_iterations),
+        (Style::NyanCat, "NyanCat", 30, total_iterations),
     ];
 
     // Initialize and stack all bars
-    for (theme, desc, width, iters) in showcase_items {
+    for (style, desc, width, iters) in showcase_items {
         let pb = ProgressBar::new()
             .width(width)
-            .theme(theme)
+            .style(style)
             .desc(desc)
             .total(iters);
         

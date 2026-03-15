@@ -15,7 +15,7 @@ A lightweight, highly customizable, and thread-safe-ready CLI progress bar for R
 * **Lifecycle States:** Let users know the final outcome using a success (green) or Failure (red) state. Configure whether to clear the bar from the terminal or persist upon completion. Keep it clean!
 * **Safe Logging:** Only activates if running in a terminal to prevent piped output or log file clutter, encouraging hassle-free usage.
 * **Multi-Bar Orchestration:** Spawn multiple bars at once seamlessly! EZBars auomatically adjust themselves on your terminal when in a nested configuration.
-* **Extensive library of built-in styles:** Choose from over 20 customizable styles: pick deterministic styles for percentage-based tracking or indeterminate spinners for active loading.
+* **Extensive library of built-in styles:** Choose from over 20 customizable styles: pick deterministic styles for percentage-based tracking or indeterminate spinners for active loading. To view all possible styles run `cargo run --example style_showcase` :
 
 ---
 
@@ -23,20 +23,24 @@ A lightweight, highly customizable, and thread-safe-ready CLI progress bar for R
 
 ## Quick Start
 
-The absolute simplest way to use the progress bar is to create a handle, configure it, and wrap your iterator.
+Making progress bars are ez-pz!
 
 ```rust
-use my_crate::ProgressBar;
-use std::thread;
-use std::time::Duration;
+let pb = ProgressBar::new();
 
-fn main() {
-    let pb = ProgressBar::new();
+for item in pb.wrap(0..100) {
+    // Perform work...
+    std::thread::sleep(std::time::Duration::from_millis(30));
+}
 
-    // Wrap your iterator (0..100) and loop as normal!
-    for _ in pb.wrap(0..100) {
-        thread::sleep(Duration::from_millis(50));
-    }
+//Alternatiely, manually increment while doing work
+
+let pb2 = ProgressBar::new();
+for iter in 0..500 {
+    // ... perform complex logic ...
+
+    // Manually increment by 1 (or any amount)
+    pb.inc(1);
 }
 ```
 
@@ -140,18 +144,18 @@ fn main() {
 - Elapsed time tracking in minutes and seconds
 - Dynamic ETA based on current performance
 - Auto-scaling statistics for percentage and item counts
-- Smooth and SmoothFill themes using Unicode fractional blocks
-- Standard, Arrows, Spinner, and BrailleSpinner ASCII themes
-- Animated Pacman, Snake, and Rocket themes with propulsion trails
-- Progressive Fish, FishBounce, and Water rising level themes
-- DVD bouncing logo and EKG pulse themes
-- Waves and DotWaves right-to-left flowing ripple themes
-- TextTicker theme for customizable scrolling tickers 
+- Smooth and SmoothFill styles using Unicode fractional blocks
+- Standard, Arrows, Spinner, and BrailleSpinner ASCII styles
+- Animated Pacman, Snake, and Rocket styles with propulsion trails
+- Progressive Fish, FishBounce, and Water rising level styles
+- DVD bouncing logo and EKG pulse styles
+- Waves and DotWaves right-to-left flowing ripple styles
+- TextTicker style for customizable scrolling tickers 
 - 24-bit TrueColor gradients with customizable Hex codes
-- ModernSlim theme for high-contrast filled and empty sections
+- ModernSlim style for high-contrast filled and empty sections
 - Slim profile floating bars using mid-height characters
 - ANSI Nyan Cat with animated 256-color rainbow trail
-- Intelligent bracket logic that adapts to the chosen theme
+- Intelligent bracket logic that adapts to the chosen style
 - Thread-safe shared state management
 - Unicode-safe character handling for multi-byte emojis and symbols
 - Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
