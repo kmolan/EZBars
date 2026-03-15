@@ -145,7 +145,7 @@ fn main() {
 - Thread-safe shared state management
 - Unicode-safe character handling for multi-byte emojis and symbols
 - Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
-
+- Success/Failure States: Add a .finish_with_message("Done!") or .abandon() method that changes the bar color to green (success) or red (error) once the loop ends.
 
 ## TODO
 
@@ -161,7 +161,5 @@ fn main() {
 - Pause/Resume: Methods to temporarily stop the timer and stop the animation if the program needs to wait for user input or an external event.
 
 - Pulse/Shimmer Effect: For gradients, add an animation where a "light" pass travels across the bar (like a loading shine on a glass button).
-
-- Success/Failure States: Add a .finish_with_message("Done!") or .abandon() method that changes the bar color to green (success) or red (error) once the loop ends.
 
 - Braille Sparkline: For the stats area, show a small "history" of the speed over the last 10 seconds using Braille characters to represent a graph.

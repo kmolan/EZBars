@@ -1,50 +1,66 @@
 #[derive(Clone, Default)]
 pub enum Theme {
-    /// A standard solid bar: [████------]
+    /// A standard solid bar with custom characters: [████------]
+    /// (filled_char, empty_char)
     Standard(char, char),
 
-    /// A high-resolution bar using fractional block characters
+    /// A high-resolution bar using fractional block characters for sub-pixel precision
     #[default]
     Smooth,
 
     /// The classic retro ASCII spinner: | / - \
     Spinner,
 
-    /// Braille dot spinner (Claude style)
+    /// Braille dot patterns that rotate for a modern terminal look
     Claude,
 
-    /// A bouncing block for indeterminate progress (like KITT / Cylon)
+    /// A bouncing block for indeterminate progress
     Bouncing(usize, char, char),
 
+    /// A chomping Pacman that eats dots as progress increases
     Pacman,
 
+    /// An EKG pulse that moves across a flatline
     Heartbeat,
 
+    /// The classic DVD logo bounce that hits the "corners" of the bar
     DVD,
 
+    /// A container that "fills up" with water from bottom to top
     WaterLevel,
 
+    /// A fish swimming from left to right across the bar
     Fish,
 
+    /// A flowing sine wave using Unicode block heights
     Waves,
 
+    /// Gradually fills the bar using vertical block increments
     FillUp,
 
+    /// A directional arrow-based bar: [>>>>------]
     Arrows,
 
+    /// A rocket ship leaving a trail of fire and smoke stars
     Rocket,
 
+    /// A fish that bounces back and forth within the bar width
     FishBounce,
 
+    /// A rippling wave effect using Braille dot patterns
     DotWaves,
 
+    /// A scrolling text ticker that moves inside the progress bar
     Banner(String),
 
+    /// An ANSI 256-color Nyan Cat leaving a rainbow trail
     NyanCat,
 
-    Gradient(String, String), // Start Hex, End Hex (e.g., "#ff0000", "#0000ff")
+    /// A 24-bit TrueColor gradient between two hex codes
+    Gradient(String, String),
 
-    DualColor(String, String), // (Filled Hex, Empty Hex)
+    /// A high-contrast slim bar with user-desired fill and background hex codes
+    DualColor(String, String),
 }
 
 impl Theme {
