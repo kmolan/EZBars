@@ -86,12 +86,12 @@ impl SharedState {
     /// Determines the boundary characters based on the current theme
     fn get_boundary_characters(&self) -> (&str, &str) {
         match self.theme {
-            Theme::Spinner
-            | Theme::Claude
+            Theme::AsciiSpinner
+            | Theme::BrailleSpinner
             | Theme::Pacman
-            | Theme::DualColor(..)
+            | Theme::ModernSlim(..)
             | Theme::Gradient(..)
-            | Theme::Sliding(..) => ("", ""),
+            | Theme::Marquee(..) => ("", ""),
             _ => ("|", "|"),
         }
     }

@@ -43,11 +43,11 @@ fn multiple_bars() {
     // --- Multi-Bar Operations ---
     let mut multi = MultiProgress::new();
 
-    // 1. A sleek DualColor bar for a "System Scan"
-    let pb1 = multi.add(ProgressBar::new().total(100).theme(Theme::DualColor("#00FF00".into(), "#222222".into())).desc("Core Scan"));
+    // 1. A sleek ModernSlim bar for a "System Scan"
+    let pb1 = multi.add(ProgressBar::new().total(100).theme(Theme::ModernSlim("#00FF00".into(), "#222222".into())).desc("Core Scan"));
 
-    // 2. A Standard ASCII bar for "Network Sync"
-    let pb2 = multi.add(ProgressBar::new().total(100).theme(Theme::Standard('█', '░')).desc("Net Sync"));
+    // 2. A Classic ASCII bar for "Network Sync"
+    let pb2 = multi.add(ProgressBar::new().total(100).theme(Theme::Classic('█', '░')).desc("Net Sync"));
 
     // 3. A Rocket bar just for the flair
     let pb3 = multi.add(ProgressBar::new().total(100).theme(Theme::Rocket).desc("Delivery") );

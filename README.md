@@ -131,14 +131,14 @@ fn main() {
 - Dynamic ETA based on current performance
 - Auto-scaling statistics for percentage and item counts
 - Smooth and SmoothFill themes using Unicode fractional blocks
-- Standard, Arrows, Spinner, and Claude ASCII themes
+- Standard, Arrows, Spinner, and BrailleSpinner ASCII themes
 - Animated Pacman, Snake, and Rocket themes with propulsion trails
 - Progressive Fish, FishBounce, and Water rising level themes
-- DVD bouncing logo and Heartbeat pulse themes
+- DVD bouncing logo and EKG pulse themes
 - Waves and DotWaves right-to-left flowing ripple themes
-- Banner theme for customizable scrolling tickers 
+- TextTicker theme for customizable scrolling tickers 
 - 24-bit TrueColor gradients with customizable Hex codes
-- DualColor theme for high-contrast filled and empty sections
+- ModernSlim theme for high-contrast filled and empty sections
 - Slim profile floating bars using mid-height characters
 - ANSI Nyan Cat with animated 256-color rainbow trail
 - Intelligent bracket logic that adapts to the chosen theme
@@ -148,12 +148,11 @@ fn main() {
 - Success/Failure States: Add a .finish_with_message("Done!") or .abandon() method that changes the bar color to green (success) or red (error) once the loop ends.
 - Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
 - No-terminal Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
+- Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
 
 ## TODO
 
 - Template Strings: Instead of hardcoding where the description, bar, and stats go, allow users to define a template like:
   "{desc} {bar} {percentage} | {eta}".
-
-- Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
 
 - Pause/Resume: Methods to temporarily stop the timer and stop the animation if the program needs to wait for user input or an external event.

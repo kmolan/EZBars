@@ -1,69 +1,73 @@
 #[derive(Clone, Default)]
 pub enum Theme {
-    /// A standard solid bar with custom characters: [████------]
-    /// (filled_char, empty_char)
-    Standard(char, char),
+    /// [████------] | Deterministic | Fixed-character block bar.
+    /// Parameters: (filled_char, empty_char)
+    Classic(char, char),
 
-    /// A high-resolution bar using fractional block characters for sub-pixel precision
+    /// [███▌      ] | Deterministic | High-resolution sub-pixel progress using Unicode 1/8th blocks.
     #[default]
-    Smooth,
+    Fractional,
 
-    /// The classic retro ASCII spinner: | / - \
-    Spinner,
+    /// [ █▂    ] | Deterministic | Sequential vertical fill of individual cells from left to right.
+    VerticalFill,
 
-    /// Braille dot patterns that rotate for a modern terminal look
-    Claude,
-
-    /// A bouncing block for indeterminate progress
+    /// [  ███   ] | Indeterminate | Ping-pong animation of a sliding block.
+    /// Parameters: (block_width, filled_char, empty_char)
     Bouncing(usize, char, char),
 
-    /// A chomping Pacman that eats dots as progress increases
-    Pacman,
-
-    /// An EKG pulse that moves across a flatline
-    Heartbeat,
-
-    /// The classic DVD logo bounce that hits the "corners" of the bar
-    DVD,
-
-    /// A container that "fills up" with water from bottom to top
-    WaterLevel,
-
-    /// A fish swimming from left to right across the bar
-    Fish,
-
-    /// A flowing sine wave using Unicode block heights
-    Waves,
-
-    /// Gradually fills the bar using vertical block increments
-    FillUp,
-
-    /// A directional arrow-based bar: [>>>>------]
-    Arrows,
-
-    /// A rocket ship leaving a trail of fire and smoke stars
-    Rocket,
-
-    /// A fish that bounces back and forth within the bar width
-    FishBounce,
-
-    /// A rippling wave effect using Braille dot patterns
-    DotWaves,
-
-    /// A scrolling text ticker that moves inside the progress bar
-    Banner(String),
-
-    /// An ANSI 256-color Nyan Cat leaving a rainbow trail
-    NyanCat,
-
-    /// A 24-bit TrueColor gradient between two hex codes
+    /// [ ██████ ] | Deterministic | Linear RGB interpolation between two 24-bit hex colors.
+    /// Parameters: (start_hex: String, end_hex: String)
     Gradient(String, String),
 
-    /// A high-contrast slim bar with user-desired fill and background hex codes
-    DualColor(String, String),
+    /// [ ━━━━━━ ] | Deterministic | Minimalist TrueColor slim-line bar for modern terminal emulators.
+    /// Parameters: (fill_hex: String, background_hex: String)
+    ModernSlim(String, String),
 
-    /// A scrolling indeterminate bar: (Color1 Hex, Color2 Hex)
-    Sliding(String, String),
+    /// [ ━━━    ] | Indeterminate | Temporal-based color-shifting pattern for indeterminate states.
+    /// Parameters: (primary_hex: String, secondary_hex: String)
+    Marquee(String, String),
+
+    /// [ | ] | Indeterminate | Sequential ASCII rotation: `|`, `/`, `-`, `\`.
+    AsciiSpinner,
+
+    /// [ ⠋ ] | Indeterminate | Modern high-density rotation using 8-dot Braille patterns.
+    BrailleSpinner,
+
+    /// [ Hello! ] | Indeterminate | Horizontal marquee for strings longer than the bar width.
+    TextTicker(String),
+
+    /// [  DVD   ] | Indeterminate | Bouncing logo logic that mirrors terminal screen-saver behavior.
+    DVD,
+
+    /// [ ᗧ • • ] | Deterministic | Progression-based animation with alternating "mouth" states.
+    Pacman,
+
+    /// [ -/\--• ] | Deterministic | Dynamic EKG line with a leading pulse blip.
+    EKG,
+
+    /// [ ▂▃▅▆▇ ] | Deterministic | Global vertical fill level across the entire bar width.
+    WaterLevel,
+
+    /// [ ><(((°> ] | Deterministic | Linear translation of an entity from left to right.
+    Fish,
+
+    /// [ ▁▅▇██▇▅ ] | Indeterminate | Procedural sine-wave oscillation using block height variations.
+    Waves,
+
+    /// [ >>>>   ] | Deterministic | Head-heavy directional bar using ASCII chevrons.
+    Arrows,
+
+    /// [ 🚀~~~~ ] | Deterministic | Leading emoji entity with ANSI-colored exhaust and starfield.
+    Rocket,
+
+    /// [ <°)))>< ] | Indeterminate | Ping-pong entity movement with directional sprite-flipping.
+    FishBounce,
+
+    /// [ ⠁⠈⠐⠠ ] | Indeterminate | High-speed rippling effect utilizing temporal Braille offsets.
+    DotWaves,
+
+    /// [ ~~~🐱  ] | Deterministic | 256-color rainbow trail with a trailing cat.
+    NyanCat,
 }
 
 impl Theme {
@@ -77,15 +81,10 @@ impl Theme {
         (r, g, b)
     }
 
-    /// Returns the standard bar with default '█' and '-'
-    pub fn standard() -> Self {
-        Theme::Standard('█', '-')
-    }
-
     /// Renders the visual portion of the progress bar based on the active theme
     pub fn render(&self, width: usize, current: usize, total: usize) -> String {
         match self {
-            Theme::Standard(fill, empty) => {
+            Theme::Classic(fill, empty) => {
                 let percent = if total == 0 {
                     1.0
                 } else {
@@ -101,7 +100,7 @@ impl Theme {
                 )
             }
 
-            Theme::Smooth => {
+            Theme::Fractional => {
                 let percent = if total == 0 {
                     1.0
                 } else {
@@ -125,14 +124,14 @@ impl Theme {
                 bar
             }
 
-            Theme::Spinner => {
+            Theme::AsciiSpinner => {
                 let chars = ['|', '/', '-', '\\'];
                 let c = chars[current % chars.len()];
                 let padding = width.saturating_sub(2);
                 format!("{} {}", c, " ".repeat(padding))
             }
 
-            Theme::Claude => {
+            Theme::BrailleSpinner => {
                 let chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
                 let c = chars[current % chars.len()];
                 let padding = width.saturating_sub(2);
@@ -177,7 +176,7 @@ impl Theme {
                 format!("{}{}{}", eaten, mouth, food)
             }
 
-            Theme::Heartbeat => {
+            Theme::EKG => {
                 let percent = if total == 0 {
                     0.0
                 } else {
@@ -289,7 +288,7 @@ impl Theme {
                 res
             }
 
-            Theme::FillUp => {
+            Theme::VerticalFill => {
                 let levels = [' ', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
                 let percent = if total == 0 {
                     0.0
@@ -373,7 +372,6 @@ impl Theme {
                     }
                 }
 
-                // Emojis can be tricky with width, but this logic stays standard
                 bar
             }
 
@@ -419,13 +417,13 @@ impl Theme {
                 res
             }
 
-            Theme::Banner(text) => {
+            Theme::TextTicker(text) => {
                 let text_chars: Vec<char> = text.chars().collect();
                 let n = text_chars.len();
                 let mut res = String::with_capacity(width);
 
                 for i in 0..width {
-                    // This creates a continuous scrolling banner effect
+                    // This creates a continuous scrolling TextTicker effect
                     let idx = (i + current) % n;
                     res.push(text_chars[idx]);
                 }
@@ -493,7 +491,7 @@ impl Theme {
                 bar
             }
 
-            Theme::DualColor(fill_hex, empty_hex) => {
+            Theme::ModernSlim(fill_hex, empty_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(fill_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(empty_hex);
 
@@ -522,7 +520,7 @@ impl Theme {
                 bar
             }
 
-            Theme::Sliding(color1_hex, color2_hex) => {
+            Theme::Marquee(color1_hex, color2_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(color1_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(color2_hex);
 
@@ -538,7 +536,7 @@ impl Theme {
                 let pattern_width = 6; // Total width of one color cycle
 
                 for i in 0..width {
-                    // Offset the index by time to create the "sliding" motion
+                    // Offset the index by time to create the "Marquee" motion
                     // Using (i + time) makes it slide left; (time - i) would slide right
                     let pos = (i + time as usize) % pattern_width;
 
