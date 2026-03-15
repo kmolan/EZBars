@@ -25,6 +25,22 @@ fn failed_bar() {
 
 #[rustfmt::skip]
 fn multiple_bars() {
+    let conn_pb = ProgressBar::new()
+        .total(100)
+        .theme(Theme::Bouncing(4, '█', '·'))
+        .desc("Connecting to Host");
+
+    // Simulate waiting for a handshake
+    for _ in 0..40 {
+        conn_pb.inc(1);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+    conn_pb.finish_with_message("Connected!");
+    
+    // Add a small gap after the connection is established
+    println!();
+
+    // --- Multi-Bar Operations ---
     let mut multi = MultiProgress::new();
 
     // 1. A sleek DualColor bar for a "System Scan"
@@ -41,10 +57,10 @@ fn multiple_bars() {
         // Core Scan is fast and reliable
         if i <= 100 { pb1.inc(1); }
         
-        // Net Sync is a bit slower
+        // Net Sync is a bit slower (stops at 60 due to abandonment)
         if i % 2 == 0 && i <= 60 { pb2.inc(1); }
         
-        // Rocket is constant
+        // Rocket is constant 2x speed
         pb3.inc(2);
 
         std::thread::sleep(std::time::Duration::from_millis(40));
@@ -52,7 +68,6 @@ fn multiple_bars() {
         // Mid-way failure simulation for the Network Sync
         if i == 60 {
             pb2.abandon("Connection Timed Out!");
-            // We'll keep the others running
         }
     }
 
@@ -68,19 +83,13 @@ fn main() {
     println!("\n\nThe progress bar below will \x1b[31mFAIL\x1b[0m");
     failed_bar();
 
-    println!("\n\nThe progress bar below will persist after its finished");
-    let pb_persist = ProgressBar::new().desc("Permanent").clear_on_finish(false);
-    for _ in pb_persist.wrap(0..20) {
-        thread::sleep(Duration::from_millis(100));
-    }
-
     println!("\n\nThe progress bar below will VANISH after its finished");
     let pb_ghost = ProgressBar::new().desc("Ghost Bar").clear_on_finish(true);
     for _ in pb_ghost.wrap(0..20) {
         thread::sleep(Duration::from_millis(100));
     }
 
-    println!("\n\nSpawn multiple bars to track specific processes! Some will \x1b[31mFAIL\x1b[0m others might \x1b[32mSUCCEED\x1b[0m");
+    println!("\n\nSpawn multiple bars at once!");
     multiple_bars();
 
     println!("\n\nAll showcases complete!");

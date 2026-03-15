@@ -38,12 +38,13 @@ impl SharedState {
     }
 
     fn compute_eta(&self) -> String {
-        if self.status != Status::Running { // Don't bother computing if progress bar is finished
+        if self.status != Status::Running {
+            // Don't bother computing if progress bar is finished
             return String::new();
         }
 
         let mut time_info = String::new();
-        
+
         if let Some(start) = self.start_time {
             let elapsed = start.elapsed();
             let elapsed_str = Self::format_duration(elapsed);
@@ -77,7 +78,7 @@ impl SharedState {
             | Theme::Claude
             | Theme::Pacman
             | Theme::DualColor(..)
-            | Theme::Gradient(..) 
+            | Theme::Gradient(..)
             | Theme::Sliding(..) => ("", ""),
             _ => ("|", "|"),
         }

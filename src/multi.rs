@@ -18,14 +18,14 @@ impl MultiProgress {
     /// Adds a bar to the manager.
     /// Existing bars are pushed "up" to make room for the new one at the bottom.
     pub fn add(&mut self, pb: ProgressBar) -> ProgressBar {
-        // Every time we add a bar, we print a newline to
+        // Every time a new bar is added, print two newlines to
         // "reserve" space and move the terminal scrollback down.
-        println!();
+        println!("\n");
 
         // Increment offset for all bars already in the list
         for bar in &self.bars {
             let mut state = bar.state.borrow_mut();
-            state.offset += 1;
+            state.offset += 2;
         }
 
         // Newest bar starts at offset 0 (the current bottom line)

@@ -525,22 +525,23 @@ impl Theme {
             Theme::Sliding(color1_hex, color2_hex) => {
                 let (r1, g1, b1) = Self::hex_to_rgb(color1_hex);
                 let (r2, g2, b2) = Self::hex_to_rgb(color2_hex);
-            
+
                 // Speed: higher divisor = slower movement
                 let time = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_millis() / 80; 
-            
+                    .as_millis()
+                    / 80;
+
                 let mut bar = String::new();
                 let bar_char = '━';
                 let pattern_width = 6; // Total width of one color cycle
-            
+
                 for i in 0..width {
                     // Offset the index by time to create the "sliding" motion
                     // Using (i + time) makes it slide left; (time - i) would slide right
                     let pos = (i + time as usize) % pattern_width;
-            
+
                     // If pos is in the first half of the pattern, use Color 1, else Color 2
                     if pos < pattern_width / 2 {
                         bar.push_str(&format!("\x1b[38;2;{};{};{}m{}", r1, g1, b1, bar_char));
@@ -548,7 +549,7 @@ impl Theme {
                         bar.push_str(&format!("\x1b[38;2;{};{};{}m{}", r2, g2, b2, bar_char));
                     }
                 }
-            
+
                 bar.push_str("\x1b[0m");
                 bar
             }
