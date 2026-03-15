@@ -3,9 +3,7 @@ use std::thread;
 use std::time::Duration;
 
 fn main() {
-    let pb = ProgressBar::new()
-        .width(40)
-        .desc("Warming up");
+    let pb = ProgressBar::new().width(40).desc("Warming up");
 
     for i in pb.wrap(0..100) {
         // 1. Dynamic Prefix (Description)
@@ -30,6 +28,6 @@ fn main() {
 
         thread::sleep(Duration::from_millis(60));
     }
-    
+
     println!("Task finished successfully.");
 }

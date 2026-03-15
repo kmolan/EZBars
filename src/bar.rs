@@ -33,7 +33,11 @@ impl SharedState {
     }
 
     pub(crate) fn print(&self) {
-        let percent = if self.total == 0 { 1.0 } else { self.current as f64 / self.total as f64 };
+        let percent = if self.total == 0 {
+            1.0
+        } else {
+            self.current as f64 / self.total as f64
+        };
         let bar_string = self.theme.render(self.width, self.current, self.total);
 
         // --- Timing Logic ---
@@ -41,7 +45,7 @@ impl SharedState {
         if let Some(start) = self.start_time {
             let elapsed = start.elapsed();
             let elapsed_str = Self::format_duration(elapsed);
-            
+
             // Calculate speed (it/s)
             let speed = if elapsed.as_secs_f64() > 0.0 {
                 self.current as f64 / elapsed.as_secs_f64()
@@ -61,31 +65,48 @@ impl SharedState {
             time_info = format!(" [{} < {}, {:.2} it/s]", elapsed_str, eta_str, speed);
         }
 
-        let prefix = if self.desc.is_empty() { String::new() } else { format!("{}: ", self.desc) };
-        let suffix = if self.postfix.is_empty() { String::new() } else { format!(", {}", self.postfix) };
+        let prefix = if self.desc.is_empty() {
+            String::new()
+        } else {
+            format!("{}: ", self.desc)
+        };
+        let suffix = if self.postfix.is_empty() {
+            String::new()
+        } else {
+            format!(", {}", self.postfix)
+        };
 
         let (left, right) = match self.theme {
-            Theme::Spinner | Theme::Claude | Theme::Pacman | Theme::DualColor(..) | Theme::Gradient(..) => ("", ""),
+            Theme::Spinner
+            | Theme::Claude
+            | Theme::Pacman
+            | Theme::DualColor(..)
+            | Theme::Gradient(..) => ("", ""),
             _ => ("|", "|"),
         };
 
         // Standard stats (Percent and Count)
         let stats = match self.theme {
             Theme::Spinner | Theme::Claude => String::new(),
-            _ => format!(" {:>3}% [{}/{}]", (percent * 100.0) as usize, self.current, self.total),
+            _ => format!(
+                " {:>3}% [{}/{}]",
+                (percent * 100.0) as usize,
+                self.current,
+                self.total
+            ),
         };
 
         print!(
-            "\r{}{}{}{}{}{}{}{}",
-            prefix, left, bar_string, right, stats, time_info, suffix, "\x1b[K"
+            "\r{}{}{}{}{}{}{}\x1b[K",
+            prefix, left, bar_string, right, stats, time_info, suffix
         );
         io::stdout().flush().unwrap();
     }
 
     pub(crate) fn write(&self, msg: &str) {
-        print!("\r\x1b[K"); 
-        println!("{}", msg);  
-        self.print();         
+        print!("\r\x1b[K");
+        println!("{}", msg);
+        self.print();
     }
 }
 
@@ -95,7 +116,9 @@ pub struct ProgressBar {
 }
 
 impl Default for ProgressBar {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ProgressBar {
@@ -153,16 +176,16 @@ impl ProgressBar {
         self.state.borrow_mut().clear_line();
     }
 
-    pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter> 
-    where 
-        I::IntoIter: ExactSizeIterator 
+    pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter>
+    where
+        I::IntoIter: ExactSizeIterator,
     {
         let iter = iterable.into_iter();
         self.state.borrow_mut().total = iter.len();
 
         ProgressBarIter {
             iter,
-            state: Rc::clone(&self.state), 
+            state: Rc::clone(&self.state),
         }
     }
 }
