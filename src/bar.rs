@@ -6,6 +6,13 @@ use std::time::{Duration, Instant};
 use crate::iter::ProgressBarIter;
 use crate::theme::Theme;
 
+#[derive(Clone, PartialEq)]
+pub enum Status {
+    Running,
+    Success,
+    Failure,
+}
+
 pub(crate) struct SharedState {
     pub(crate) total: usize,
     pub(crate) current: usize,
@@ -15,6 +22,8 @@ pub(crate) struct SharedState {
     pub(crate) postfix: String,
     pub(crate) start_time: Option<Instant>,
     pub(crate) clear_on_finish: bool,
+    pub(crate) status: Status,
+    pub(crate) final_message: Option<String>,
 }
 
 impl SharedState {
@@ -26,23 +35,14 @@ impl SharedState {
         format!("{:02}:{:02}", mins, secs)
     }
 
-    pub(crate) fn clear_line(&self) {
-        // \r moves to start, \x1b[K clears from cursor to end of line
-        print!("\r\x1b[K");
-        let _ = std::io::stdout().flush();
-    }
-
-    pub(crate) fn print(&self) {
-        let percent = if self.total == 0 {
-            1.0
-        } else {
-            self.current as f64 / self.total as f64
-        };
-        let bar_string = self.theme.render(self.width, self.current, self.total);
-
-        // --- Timing Logic ---
+    fn compute_eta(&self) -> String {
         let mut time_info = String::new();
         if let Some(start) = self.start_time {
+            // Don't bother computing if progress bar is finished
+            if self.status != Status::Running {
+                return time_info;
+            }
+
             let elapsed = start.elapsed();
             let elapsed_str = Self::format_duration(elapsed);
 
@@ -65,17 +65,16 @@ impl SharedState {
             time_info = format!(" [{} < {}, {:.2} it/s]", elapsed_str, eta_str, speed);
         }
 
-        let prefix = if self.desc.is_empty() {
-            String::new()
-        } else {
-            format!("{}: ", self.desc)
-        };
-        let suffix = if self.postfix.is_empty() {
-            String::new()
-        } else {
-            format!(", {}", self.postfix)
-        };
+        time_info
+    }
 
+    pub(crate) fn clear_line(&self) {
+        // \r moves to start, \x1b[K clears from cursor to end of line
+        print!("\r\x1b[K");
+        let _ = std::io::stdout().flush();
+    }
+
+    pub(crate) fn print(&self) {
         let (left, right) = match self.theme {
             Theme::Spinner
             | Theme::Claude
@@ -83,6 +82,12 @@ impl SharedState {
             | Theme::DualColor(..)
             | Theme::Gradient(..) => ("", ""),
             _ => ("|", "|"),
+        };
+
+        let percent = if self.total == 0 {
+            1.0
+        } else {
+            self.current as f64 / self.total as f64
         };
 
         // Standard stats (Percent and Count)
@@ -96,9 +101,40 @@ impl SharedState {
             ),
         };
 
+        let mut bar_string = self.theme.render(self.width, self.current, self.total);
+
+        // Apply state-based coloring
+        bar_string = match self.status {
+            Status::Success => format!("\x1b[32m{}\x1b[0m", bar_string), // Green
+            Status::Failure => format!("\x1b[31m{}\x1b[0m", bar_string), // Red
+            Status::Running => bar_string,
+        };
+
+        let msg = self.final_message.as_deref().unwrap_or("");
+        let prefix = if self.desc.is_empty() {
+            String::new()
+        } else {
+            format!("{}: ", self.desc)
+        };
+
+        // If failed, we might want to show the error message after the bar
+        let suffix = if self.status == Status::Failure && !msg.is_empty() {
+            format!(" - Error: {}", msg)
+        } else if !msg.is_empty() {
+            format!(" - {}", msg)
+        } else {
+            String::new()
+        };
+
         print!(
             "\r{}{}{}{}{}{}{}\x1b[K",
-            prefix, left, bar_string, right, stats, time_info, suffix
+            prefix,
+            left,
+            bar_string,
+            right,
+            stats,
+            self.compute_eta(),
+            suffix
         );
         io::stdout().flush().unwrap();
     }
@@ -133,6 +169,8 @@ impl ProgressBar {
                 postfix: String::new(),
                 start_time: None,
                 clear_on_finish: false, // Default to persist
+                status: Status::Running,
+                final_message: None,
             })),
         }
     }
@@ -174,6 +212,30 @@ impl ProgressBar {
     /// Manual trigger to hide/clear the bar
     pub fn finish_and_clear(&self) {
         self.state.borrow_mut().clear_line();
+    }
+
+    pub fn finish_with_message(&self, msg: &str) {
+        let mut state = self.state.borrow_mut();
+        state.status = Status::Success;
+        // Snap to 100% for a clean look
+        state.current = state.total;
+        state.final_message = Some(msg.to_string());
+
+        // Print one last time to the SAME line
+        state.print();
+
+        // Move the cursor down so subsequent prints don't overwrite
+        println!();
+    }
+
+    pub fn abandon(&self, msg: &str) {
+        let mut state = self.state.borrow_mut();
+        state.status = Status::Failure;
+        state.final_message = Some(msg.to_string());
+
+        state.print();
+
+        println!();
     }
 
     pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter>

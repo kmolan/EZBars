@@ -27,21 +27,6 @@ fn main() {
         (Theme::DualColor("#FF0000".into(), "#444444".into()), "DualColor", 30, 50),
     ];
 
-    let pb_persist = ProgressBar::new().desc("Permanent").clear_on_finish(false);
-    for _ in pb_persist.wrap(0..20) {
-        thread::sleep(Duration::from_millis(100));
-    }
-
-    print!("\n");
-
-    // This bar will vanish completely after finishing
-    let pb_ghost = ProgressBar::new().desc("Ghost Bar").clear_on_finish(true);
-    for _ in pb_ghost.wrap(0..20) {
-        thread::sleep(Duration::from_millis(100));
-    }
-
-    print!("\n");
-
     for (_, (theme, desc, width, iters)) in showcase_items.into_iter().enumerate() {
         let pb = ProgressBar::new().width(width).theme(theme).desc(desc);
 
@@ -49,7 +34,7 @@ fn main() {
             thread::sleep(Duration::from_millis(100));
         }
 
-        print!("\n")
+        print!("\n\n")
     }
 
     println!("\nAll showcases complete!");

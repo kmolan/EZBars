@@ -30,8 +30,6 @@ where
             // We reached the end of the progress bar
             if state.clear_on_finish {
                 state.clear_line();
-            } else {
-                println!(); // Just move to the next line so bar can persist
             }
         }
 
