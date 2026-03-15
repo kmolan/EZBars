@@ -2,6 +2,7 @@ use ezbars::{ProgressBar, Theme};
 use std::thread;
 use std::time::Duration;
 
+#[rustfmt::skip]
 fn main() {
     // Format: (Enum, Description, Width, Iterations)
     let showcase_items = vec![
@@ -20,25 +21,10 @@ fn main() {
         (Theme::Rocket, "Rocket", 30, 100),
         (Theme::FishBounce, "FishBounce", 30, 50),
         (Theme::DotWaves, "DotWaves", 30, 50),
-        (
-            Theme::Banner("  Custom text here  ".to_string()),
-            "Banner",
-            30,
-            100,
-        ),
+        (Theme::Banner("  Custom text here  ".to_string()), "Banner", 30, 100),
         (Theme::NyanCat, "NyanCat", 30, 60),
-        (
-            Theme::Gradient("#FF00FF".into(), "#00FFFF".into()),
-            "Gradient",
-            30,
-            50,
-        ),
-        (
-            Theme::DualColor("#FF0000".into(), "#444444".into()),
-            "DualColor",
-            30,
-            50,
-        ),
+        (Theme::Gradient("#FF00FF".into(), "#00FFFF".into()), "Gradient", 30, 50),
+        (Theme::DualColor("#FF0000".into(), "#444444".into()), "DualColor", 30, 50),
     ];
 
     let pb_persist = ProgressBar::new().desc("Permanent").clear_on_finish(false);
