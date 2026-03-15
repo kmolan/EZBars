@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::io::Write;
+use std::io::{Write, stdout, IsTerminal};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -25,6 +25,7 @@ pub(crate) struct SharedState {
     pub(crate) status: Status,
     pub(crate) final_message: Option<String>,
     pub(crate) offset: usize, // Vertical distance from the bottom line
+    pub(crate) is_terminal: bool,
 }
 
 impl SharedState {
@@ -76,6 +77,12 @@ impl SharedState {
     }
 
     pub(crate) fn print(&self) {
+        if !self.is_terminal {
+            // If we aren't in a TTY, don't print anything during increments.
+            // This prevents the log file from being filled with thousands of lines.
+            return;
+        }
+
         let (left, right) = match self.theme {
             Theme::Spinner
             | Theme::Claude
@@ -182,6 +189,7 @@ impl ProgressBar {
                 status: Status::Running,
                 final_message: None,
                 offset: 0,
+                is_terminal: stdout().is_terminal(),
             })),
         }
     }
@@ -228,8 +236,12 @@ impl ProgressBar {
         state.current = state.total;
         state.final_message = Some(msg.to_string());
 
-        // Print one last time to the SAME line
-        state.print();
+        if state.is_terminal {
+            state.print();
+        } else {
+            // Log-friendly version: "Description: [Success] Message"
+            println!("{}: [SUCCESS] {}", state.desc, msg);
+        }
     }
 
     pub fn abandon(&self, msg: &str) {
@@ -237,7 +249,12 @@ impl ProgressBar {
         state.status = Status::Failure;
         state.final_message = Some(msg.to_string());
 
-        state.print();
+        if state.is_terminal {
+            state.print();
+        } else {
+            // Log-friendly version: "Description: [Success] Message"
+            println!("{}: [FAILURE] {}", state.desc, msg);
+        }
     }
 
     /// Manually set the total (useful if not using .wrap())
