@@ -119,9 +119,49 @@ fn main() {
 }
 ```
 
-## Todo
+## Checklist
+- Iterator Wrapper for tracking progress of any iterable
+- Manual control for manual updates and incrementing tasks
+- Multi-line support with an offset system for simultaneous updates
+- Dynamic descriptions for custom prefix text
+- Custom postfix capability for appending extra data
+- Auto-timing that starts when the first iteration occurs
+- Speed tracking for real-time iterations per second 
+- Elapsed time tracking in minutes and seconds
+- Dynamic ETA based on current performance
+- Auto-scaling statistics for percentage and item counts
+- Smooth and SmoothFill themes using Unicode fractional blocks
+- Standard, Arrows, Spinner, and Claude ASCII themes
+- Animated Pacman, Snake, and Rocket themes with propulsion trails
+- Progressive Fish, FishBounce, and Water rising level themes
+- DVD bouncing logo and Heartbeat pulse themes
+- Waves and DotWaves right-to-left flowing ripple themes
+- Banner theme for customizable scrolling tickers 
+- 24-bit TrueColor gradients with customizable Hex codes
+- DualColor theme for high-contrast filled and empty sections
+- Slim profile floating bars using mid-height characters
+- ANSI Nyan Cat with animated 256-color rainbow trail
+- Intelligent bracket logic that adapts to the chosen theme
+- Thread-safe shared state management
+- Unicode-safe character handling for multi-byte emojis and symbols
 
-- Time & Speed Tracking: Calculate iterations per second (or custom units) and display an ETA.
+## TODOP
 
-- Dynamic Terminal Width: (Optional) Query the OS to automatically adjust the bar size if the user resizes their terminal window.
-- high resolution smooth bar, spinner, bouncing, color gradient, fill, waves, water level, pacman, snake, rocket, bouncing DVD, pulse, text floating by, claude spinner
+- No-TTY Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
+
+- Template Strings: Instead of hardcoding where the description, bar, and stats go, allow users to define a template like:
+  "{desc} {bar} {percentage} | {eta}".
+
+- Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
+
+- Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
+
+- Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
+
+- Pause/Resume: Methods to temporarily stop the timer and stop the animation if the program needs to wait for user input or an external event.
+
+- Pulse/Shimmer Effect: For gradients, add an animation where a "light" pass travels across the bar (like a loading shine on a glass button).
+
+- Success/Failure States: Add a .finish_with_message("Done!") or .abandon() method that changes the bar color to green (success) or red (error) once the loop ends.
+
+- Braille Sparkline: For the stats area, show a small "history" of the speed over the last 10 seconds using Braille characters to represent a graph.
