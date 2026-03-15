@@ -25,11 +25,11 @@ fn failed_bar() {
 
 #[rustfmt::skip]
 fn main() {
-    println!("The progress bar below will succeed");
+    println!("The progress bar below will \x1b[32mSUCCEED\x1b[0m");
     success_bar();
     print!("\n");
 
-    println!("The progress bar below will FAIL");
+    println!("The progress bar below will \x1b[31mFAIL\x1b[0m");
     failed_bar();
     print!("\n\n");
 
@@ -45,6 +45,15 @@ fn main() {
     for _ in pb_ghost.wrap(0..20) {
         thread::sleep(Duration::from_millis(100));
     }
+    print!("\n\n");
+
+    println!("The progress bar below is manually incremented by the user");
+    let pb_manual = ProgressBar::new() .total(100).desc("Manual Task");
+    for _ in 0..100 {
+        pb_manual.inc(1); // Manually pushing the bar forward
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    pb_manual.finish_with_message("Done!");
 
     println!("\n\nAll showcases complete!");
 }

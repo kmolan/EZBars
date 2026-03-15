@@ -138,12 +138,6 @@ impl SharedState {
         );
         io::stdout().flush().unwrap();
     }
-
-    pub(crate) fn write(&self, msg: &str) {
-        print!("\r\x1b[K");
-        println!("{}", msg);
-        self.print();
-    }
 }
 
 #[derive(Clone)]
@@ -199,10 +193,6 @@ impl ProgressBar {
         self.state.borrow_mut().postfix = postfix.into();
     }
 
-    pub fn write<S: AsRef<str>>(&self, msg: S) {
-        self.state.borrow().write(msg.as_ref());
-    }
-
     /// Configuration: Should the bar disappear when finished?
     pub fn clear_on_finish(self, clear: bool) -> Self {
         self.state.borrow_mut().clear_on_finish = clear;
@@ -236,6 +226,32 @@ impl ProgressBar {
         state.print();
 
         println!();
+    }
+
+    /// Manually set the total (useful if not using .wrap())
+    pub fn total(self, total: usize) -> Self {
+        self.state.borrow_mut().total = total;
+        self
+    }
+
+    /// Increment the progress by a specific amount
+    pub fn inc(&self, amount: usize) {
+        let mut state = self.state.borrow_mut();
+        
+        // Start timer on the first manual increment
+        if state.start_time.is_none() {
+            state.start_time = Some(std::time::Instant::now());
+        }
+
+        state.current = (state.current + amount).min(state.total);
+        state.print();
+    }
+
+    /// Set progress to a specific absolute value
+    pub fn set_position(&self, pos: usize) {
+        let mut state = self.state.borrow_mut();
+        state.current = pos.min(state.total);
+        state.print();
     }
 
     pub fn wrap<I: IntoIterator>(&self, iterable: I) -> ProgressBarIter<I::IntoIter>
