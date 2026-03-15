@@ -15,6 +15,7 @@ A lightweight, highly customizable, and thread-safe-ready CLI progress bar for R
 * **Lifecycle States:** Let users know the final outcome using a success (green) or Failure (red) state. Configure whether to clear the bar from the terminal or persist upon completion. Keep it clean!
 * **Safe Logging:** Only activates if running in a terminal to prevent piped output or log file clutter, encouraging hassle-free usage.
 * **Multi-Bar Orchestration:** Spawn multiple bars at once seamlessly! EZBars auomatically adjust themselves on your terminal when in a nested configuration.
+* **Smart ETA:**  Intelligent _Exponential Smoothing Algorithm_ for highly accurate statistics. 
 * **Extensive library of built-in styles:** Choose from over 20 customizable styles: pick deterministic styles for percentage-based tracking or indeterminate spinners for active loading. To view all possible styles run `cargo run --example style_showcase` :
 
 ---
@@ -46,120 +47,145 @@ for iter in 0..500 {
 
 ## Static Configuration
 
-You can fully customize the look and feel of the progress bar before the loop starts by chaining builder methods.
+You can fully customize the look and feel of the progress bar before the loop starts by chaining the builder methods.
 
 ```rust
+// Fully configure using the Builder Pattern
 let pb = ProgressBar::new()
-    .width(50)             // Set the physical width of the bar
-    .fill_char('#')        // Character for completed progress
-    .empty_char('.')       // Character for remaining progress
-    .desc("Downloading");  // Initial prefix text
-
-for _ in pb.wrap(0..100) {
-    // ...
-}
+    .total(1000)                   // Define the target completion value (optional)
+    .theme(Style::Fractional)      // Choose a visual style (optional)
+    .width(60)                     // Customize the width in terminal columns (optional)
+    .desc("High-Precision Upload") // Set the leading description string (optional)
+    .vanish_on_finish(true);       // Vanish the bar once finished (optional)
 ```
 
-## Dynamic Text Updates
-Because the ProgressBar uses a shared-state architecture under the hood, you can safely update the text of the bar from inside the loop body!
-
-- set_description: Updates the text before the progress bar. Great for indicating current phases or steps.
-
-- set_postfix: Updates the text after the progress bar. Perfect for live metrics (loss, accuracy, speed, file names).
+## Dynamic Updates
+Update the bar on the fly!
 
 ```rust
-let pb = ProgressBar::new().desc("Initializing");
+    let pb = ProgressBar::new();
 
-for i in pb.wrap(0..100) {
-    // 1. Update the description when reaching specific milestones
-    if i == 20 {
-        pb.set_description("Extracting Files");
-    } else if i == 80 {
-        pb.set_description("Cleaning Up");
-    }
-
-    // 2. Update the postfix on every single iteration with live data
-    let current_memory = calculate_memory(i);
-    pb.set_postfix(format!("Mem: {} MB", current_memory));
-}
-```
-
-## Safe Logging (write)
-
-If you use a standard println!() inside your loop, it will print right over the top of the progress bar, leaving a messy trail in your terminal.
-
-Instead, use pb.write(). This method temporarily clears the bar, prints your log message, and seamlessly redraws the bar underneath it.
-
-```rust
-let pb = ProgressBar::new().desc("Processing");
-
-for i in pb.wrap(0..100) {
-    // Safely print warnings or logs mid-loop without breaking the UI
-    if i == 50 {
-        pb.write("=> [WARNING] Halfway point reached, network latency spiking.");
-    }
-}
-```
-
-## Putting It All Together
-
-```rust
-fn main() {
-    let pb = ProgressBar::new()
-        .width(40)
-        .fill_char('█')
-        .empty_char('-')
-        .desc("Warming up");
-
-    for i in pb.wrap(0..100) {
-        // Dynamic Prefix
-        if i == 10 {
-            pb.set_description("Training Model");
+    for i in 1..=100 {
+        // Change the prefix text
+        if i == 25 {
+            pb.set_description("Loading Assets...");
         }
 
-        // Dynamic Postfix
-        let fake_loss = 100.0 / (i as f64 + 1.0);
-        pb.set_postfix(format!("loss: {:.4}", fake_loss));
+        // Change metadata (like filenames or status) after the statistics
+        if i == 50 {
+            pb.set_postfix("Working on: metadata.json");
+        }
 
-        // Safe Logging
+        // Instead of incrementing, you can snap the bar to a specific value
         if i == 75 {
-            pb.write("=> Epoch 75 reached. Saving checkpoint...");
+            pb.set_position(90); // Jump directly to 90%
+        }
+        else{
+            // You can also manually increment to whatever value you want
+            pb.manually_increment(1);
+            // pb.manually_increment(5);
+            // pb.manually_increment(10);
         }
 
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        if failure_condition()
+        {
+            // Failure Termination
+            // Stops the bar, colors it RED, and displays a final message
+            pb.finish_with_failure("Connection Lost!");
+            return;
+        }
+
+        thread::sleep(Duration::from_millis(50));
     }
-    
-    println!("Task Complete!");
-}
+
+    // Success Termination
+    // Finishes the bar, colors it Green, and displays a final message
+    pb.finish_with_message("Deployment Successful!");
 ```
 
-## Checklist
-- Iterator Wrapper for tracking progress of any iterable
-- Manual control for manual updates and incrementing tasks
-- Multi-line support with an offset system for simultaneous updates
-- Dynamic descriptions for custom prefix text
-- Custom postfix capability for appending extra data
-- Auto-timing that starts when the first iteration occurs
-- Speed tracking for real-time iterations per second 
-- Elapsed time tracking in minutes and seconds
-- Dynamic ETA based on current performance
-- Auto-scaling statistics for percentage and item counts
-- Smooth and SmoothFill styles using Unicode fractional blocks
-- Standard, Arrows, Spinner, and BrailleSpinner ASCII styles
-- Animated Pacman, Snake, and Rocket styles with propulsion trails
-- Progressive Fish, FishBounce, and Water rising level styles
-- DVD bouncing logo and EKG pulse styles
-- Waves and DotWaves right-to-left flowing ripple styles
-- TextTicker style for customizable scrolling tickers 
-- 24-bit TrueColor gradients with customizable Hex codes
-- ModernSlim style for high-contrast filled and empty sections
-- Slim profile floating bars using mid-height characters
-- ANSI Nyan Cat with animated 256-color rainbow trail
-- Intelligent bracket logic that adapts to the chosen style
-- Thread-safe shared state management
-- Unicode-safe character handling for multi-byte emojis and symbols
-- Hidden State: Allow the bar to "finish and disappear" or "finish and persist" based on a configuration flag. Users should also be able to call this function manually.
-- Success/Failure States: Add a .finish_with_success("Done!") or .finish_with_failure() method that changes the bar color to green (success) or red (error) once the loop ends.
-- Nested Bars: Provide a MultiProgress manager that handles the drawing offsets automatically, so users can just call multi.add(pb) without manually calculating line offsets.
-- No-terminal Mode: If the program is piped into a file (e.g., myapp > log.txt), the library should detect this and stop printing ANSI escape codes/animations to avoid cluttering the log file with "garbage" characters.
-- Smoothing (EMA): Currently, if one loop iteration takes 5 seconds and the next takes 0.1 seconds, the ETA will jump wildly. Implement an Exponential Moving Average for the speed calculation so the ETA remains steady.
+## List of styles
+By default, EZBars uses the `Fractional` style for a smooth classic feel. To see all a showcase of all style options, run `cargo run --example style_showcase`. Consult the gif above to see them in action! This list will keep growing based on user feedback, so check back often! Many of these styles are also user-configurable for a personal feel.
+
+```rust
+/// [████---] | Deterministic | Fixed-character block bar. Parameters: (filled_char, empty_char)
+Classic(char, char),
+
+/// [███▌   ] | Deterministic | Default | High-resolution progress using Unicode 1/8th blocks.
+#[default]
+Fractional,
+
+/// [ █▂   ] | Deterministic | Sequential vertical fill of individual cells from left to right.
+VerticalFill,
+
+/// [  ███  ] | Indeterminate | Ping-pong animation of a sliding block. Parameters: (block_width, filled_char, empty_char)
+Bouncing(usize, char, char),
+
+/// [ ██████ ] | Deterministic | Linear RGB interpolation between two 24-bit hex colors.
+/// Parameters: (start_hex: String, end_hex: String)
+Gradient(String, String),
+
+/// [ ━━━━━━ ] | Deterministic | TrueColor slim-line bar for modern terminal emulators.
+/// Parameters: (fill_hex: String, background_hex: String)
+ModernSlim(String, String),
+
+/// [ ━━━    ] | Indeterminate | color-shifting pattern for indeterminate states.
+/// Parameters: (primary_hex: String, secondary_hex: String)
+Marquee(String, String),
+
+/// [ | ] | Indeterminate | Sequential ASCII rotation: `|`, `/`, `-`, `\`.
+AsciiSpinner,
+
+/// [ ⠋ ] | Indeterminate | Sequential rotation using 8-dot Braille patterns.
+BrailleSpinner,
+
+/// [ Hello! ] | Indeterminate | Horizontal marquee for custom strings.
+TextTicker(String),
+
+/// [  DVD   ] | Indeterminate | Bouncing DVD logo logic.
+DVD,
+
+/// [ ᗧ • • ] | Deterministic | Progression-based animation using pacman.
+Pacman,
+
+/// [ -/\--• ] | Deterministic | Dynamic EKG line with a leading pulse blip.
+EKG,
+
+/// [ ▂▃▅▆▇ ] | Deterministic | Global vertical fill level across the entire bar width.
+WaterLevel,
+
+/// [ ><(((°> ] | Deterministic | Fish swimming from left to right.
+Fish,
+
+/// [ ▁▅▇██▇▅ ] | Indeterminate | sine-wave oscillations using block height variations.
+Waves,
+
+/// [ >>>>   ] | Deterministic | Directional arrows using ASCII chevrons.
+Arrows,
+
+/// [ 🚀~~~~ ] | Deterministic | Rocket flying with ANSI-colored exhaust and starfield.
+Rocket,
+
+/// [ <°)))>< ] | Indeterminate | Ping-pong anuimation of a fish.
+FishBounce,
+
+/// [ ⠁⠈⠐⠠ ] | Indeterminate | High-speed rippling effect using dots.
+DotWaves,
+
+/// [ ~~~🐱  ] | Deterministic | 256-color rainbow trail with a cat.
+NyanCat
+```
+
+## Safe Logging
+_EZBars_ uses `std::io:IsTerminal` to automatically detect if its being used inside a terminal application. This allows it to prevent piped output or log file clutter, encouraging hassle-free usage.
+
+---
+
+## Ackowledgement
+- Thanks to https://github.com/rsalmei/alive-progress for inspiration .
+- I used Gemini Pro to write most of this code.
+
+## Contact
+Email me at anmolkathail@gmail.com , or create an issue in the github repository.
+
+## Contributions
+See [CONTRIBUTIONS.md](./CONTRIBUTIONS.md)

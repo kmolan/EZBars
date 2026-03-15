@@ -30,10 +30,10 @@ pub enum Style {
     /// [ | ] | Indeterminate | Sequential ASCII rotation: `|`, `/`, `-`, `\`.
     AsciiSpinner,
 
-    /// [ ⠋ ] | Indeterminate | Modern high-density rotation using 8-dot Braille patterns.
+    /// [ ⠋ ] | Indeterminate | Sequential rotation using 8-dot Braille patterns.
     BrailleSpinner,
 
-    /// [ Hello! ] | Indeterminate | Horizontal marquee for strings longer than the bar width.
+    /// [ Hello! ] | Indeterminate | Horizontal marquee for custom strings.
     TextTicker(String),
 
     /// [  DVD   ] | Indeterminate | Bouncing logo logic that mirrors terminal screen-saver behavior.
