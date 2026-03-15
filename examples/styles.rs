@@ -5,22 +5,25 @@ use std::time::Duration;
 fn main() {
     // Format: (Enum, Description, Width, Iterations)
     let showcase_items = vec![
-        (Theme::Smooth, "Smooth", 30, 50),
-        (Theme::FillUp, "FillUp", 30, 50),
-        (Theme::bouncing(), "bouncing", 30, 50),
-        (Theme::Spinner, "Spinner", 10, 30),
-        (Theme::Claude, "Claude", 10, 30),
-        (Theme::Pacman, "Pacman", 20, 40),
-        (Theme::Heartbeat, "Heartbeat", 20, 40),
-        (Theme::DVD, "DVD", 20, 40),
-        (Theme::WaterLevel, "WaterLevel", 30, 50),
-        (Theme::Fish, "Fish", 30, 60),
-        (Theme::Snake, "Snake", 30, 60),
-        (Theme::Waves, "Waves", 30, 60),
-        (Theme::Arrows, "Arrows", 30, 50),
+        // (Theme::Smooth, "Smooth", 30, 50),
+        // (Theme::FillUp, "FillUp", 30, 50),
+        // (Theme::Bouncing(4, '█', ' '), "Bouncing", 30, 50),
+        // (Theme::Spinner, "Spinner", 10, 30),
+        // (Theme::Claude, "Claude", 10, 30),
+        // (Theme::Pacman, "Pacman", 20, 40),
+        // (Theme::Heartbeat, "Heartbeat", 20, 40),
+        // (Theme::DVD, "DVD", 20, 40),
+        // (Theme::WaterLevel, "WaterLevel", 30, 50),
+        // (Theme::Fish, "Fish", 30, 60),
+        // (Theme::Waves, "Waves", 30, 60),
+        // (Theme::Arrows, "Arrows", 30, 50),
+        (Theme::Rocket, "Rocket", 30, 100),
         (Theme::FishBounce, "FishBounce", 30, 50),
         (Theme::DotWaves, "DotWaves", 30, 50),
         (Theme::Banner(" Custom text here ".to_string()), "Banner", 30, 100),
+        (Theme::NyanCat, "NyanCat", 30, 60),
+        (Theme::Gradient("#FF00FF".into(), "#00FFFF".into()), "Gradient", 30, 50),
+        (Theme::DualColor("#FF0000".into(), "#444444".into()), "DualColor", 30, 50)
     ];
 
     // 2. Loop through the list once

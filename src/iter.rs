@@ -16,13 +16,18 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let item = self.iter.next();
+        let mut state = self.state.borrow_mut();
+
+        // Start the timer on the first call to next()
+        if state.start_time.is_none() {
+            state.start_time = Some(std::time::Instant::now());
+        }
 
         if item.is_some() {
-            let mut state = self.state.borrow_mut();
             state.current += 1;
             state.print();
         } else {
-            println!(); // Don't overwrite the final bar
+            println!(); 
         }
 
         item

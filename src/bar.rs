@@ -1,45 +1,77 @@
 use std::cell::RefCell;
 use std::io::{self, Write};
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 use crate::iter::ProgressBarIter;
-use crate::theme::Theme; // Import our new theme!
+use crate::theme::Theme;
 
 pub(crate) struct SharedState {
     pub(crate) total: usize,
     pub(crate) current: usize,
     pub(crate) width: usize,
-    pub(crate) theme: Theme, // Replaced fill_char and empty_char
+    pub(crate) theme: Theme,
     pub(crate) desc: String,
     pub(crate) postfix: String,
+    pub(crate) start_time: Option<Instant>,
 }
 
 impl SharedState {
+    // Helper to format seconds into 00:00
+    fn format_duration(duration: Duration) -> String {
+        let total_secs = duration.as_secs();
+        let mins = total_secs / 60;
+        let secs = total_secs % 60;
+        format!("{:02}:{:02}", mins, secs)
+    }
+
     pub(crate) fn print(&self) {
         let percent = if self.total == 0 { 1.0 } else { self.current as f64 / self.total as f64 };
-        
         let bar_string = self.theme.render(self.width, self.current, self.total);
+
+        // --- Timing Logic ---
+        let mut time_info = String::new();
+        if let Some(start) = self.start_time {
+            let elapsed = start.elapsed();
+            let elapsed_str = Self::format_duration(elapsed);
+            
+            // Calculate speed (it/s)
+            let speed = if elapsed.as_secs_f64() > 0.0 {
+                self.current as f64 / elapsed.as_secs_f64()
+            } else {
+                0.0
+            };
+
+            // Calculate ETA
+            let eta_str = if speed > 0.0 && self.current < self.total {
+                let remaining = self.total - self.current;
+                let eta_duration = Duration::from_secs_f64(remaining as f64 / speed);
+                Self::format_duration(eta_duration)
+            } else {
+                "??:??".to_string()
+            };
+
+            time_info = format!(" [{} < {}, {:.2} it/s]", elapsed_str, eta_str, speed);
+        }
 
         let prefix = if self.desc.is_empty() { String::new() } else { format!("{}: ", self.desc) };
         let suffix = if self.postfix.is_empty() { String::new() } else { format!(", {}", self.postfix) };
 
-        // 1. Dynamically decide on boundary characters
-        let (left_bracket, right_bracket) = match self.theme {
-            Theme::Spinner | Theme::Claude => ("", ""), // No boundaries for spinners!
-            _ => ("|", "|"),                            // Standard boundaries for bars
+        let (left, right) = match self.theme {
+            Theme::Spinner | Theme::Claude | Theme::Pacman | Theme::DualColor(..) | Theme::Gradient(..) => ("", ""),
+            _ => ("|", "|"),
         };
 
+        // Standard stats (Percent and Count)
         let stats = match self.theme {
-            Theme::Spinner | Theme::Claude => String::new(), // Hide stats for spinners
-            _ => format!(" {}% [{}/{}]", (percent * 100.0) as usize, self.current, self.total),
+            Theme::Spinner | Theme::Claude => String::new(),
+            _ => format!(" {:>3}% [{}/{}]", (percent * 100.0) as usize, self.current, self.total),
         };
 
-        // 2. Update the print! macro to use our new dynamic brackets
         print!(
-            "\r{}{}{}{}{}{}{}",
-            prefix, left_bracket, bar_string, right_bracket, stats, suffix, "\x1b[K"
+            "\r{}{}{}{}{}{}{}{}",
+            prefix, left, bar_string, right, stats, time_info, suffix, "\x1b[K"
         );
-
         io::stdout().flush().unwrap();
     }
 
@@ -69,6 +101,7 @@ impl ProgressBar {
                 theme: Theme::default(), // Use default theme
                 desc: String::new(),
                 postfix: String::new(),
+                start_time: None,
             })),
         }
     }

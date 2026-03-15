@@ -13,7 +13,7 @@ pub enum Theme {
     Claude,
     
     /// A bouncing block for indeterminate progress (like KITT / Cylon)
-    Bouncing { block_width: usize, fill: char, empty: char },
+    Bouncing(usize, char, char),
 
     Pacman,
 
@@ -25,19 +25,25 @@ pub enum Theme {
 
     Fish,
 
-    Snake,
-
     Waves,
 
     FillUp,
 
     Arrows,
 
+    Rocket,
+
     FishBounce,
 
     DotWaves,
 
     Banner(String),
+
+    NyanCat,
+
+    Gradient(String, String), // Start Hex, End Hex (e.g., "#ff0000", "#0000ff")
+
+    DualColor(String, String), // (Filled Hex, Empty Hex)
 }
 
 impl Default for Theme {
@@ -47,22 +53,21 @@ impl Default for Theme {
 }
 
 impl Theme {
+    fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
+        let hex = hex.trim_start_matches('#');
+
+        let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
+        let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0);
+        let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0);
+
+        (r, g, b)
+    }
+
     /// Returns the standard bar with default '█' and '-'
     pub fn standard() -> Self {
         Theme::Standard('█', '-')
     }
 
-    /// Returns a bouncing bar with a default width of 4 and '█' block
-    pub fn bouncing() -> Self {
-        Theme::Bouncing { 
-            block_width: 4, 
-            fill: '█', 
-            empty: ' ' 
-        }
-    }
-}
-
-impl Theme {
     /// Renders the visual portion of the progress bar based on the active theme
     pub fn render(&self, width: usize, current: usize, total: usize) -> String {
         match self {
@@ -108,7 +113,7 @@ impl Theme {
                 format!("{} {}", c, " ".repeat(padding))
             }
 
-            Theme::Bouncing { block_width, fill, empty } => {
+            Theme::Bouncing(block_width, fill, empty) => {
                 if width <= *block_width {
                     return fill.to_string().repeat(width);
                 }
@@ -220,21 +225,6 @@ impl Theme {
                 res
             }
 
-            Theme::Snake => {
-                // A snake slithering across (~~~~~🐍)
-                let travel = width + 6; // body + emoji
-                let pos = current % travel;
-                // We'll just simplify the rendering for the showcase
-                let mut line: Vec<char> = " ".repeat(width).chars().collect();
-                for i in 0..6 {
-                    let p = pos as i32 - i as i32;
-                    if p >= 0 && p < width as i32 {
-                        line[p as usize] = if i == 0 { 'S' } else { '~' }; // Using 'S' to avoid emoji width bugs in some terminals
-                    }
-                }
-                line.into_iter().collect()
-            }
-
             Theme::Waves => {
                 let wave_chars: Vec<char> = "▁▅▇██▇▅▁".chars().collect();
                 let n = wave_chars.len();
@@ -289,6 +279,35 @@ impl Theme {
                 bar
             }
 
+            Theme::Rocket => {
+                let percent = if total == 0 { 0.0 } else { current as f64 / total as f64 };
+                let pos = (percent * width as f64) as usize;
+                
+                let mut bar = String::with_capacity(width);
+                
+                for i in 0..width {
+                    if i == pos {
+                        bar.push_str("🚀");
+                    } else if i < pos {
+                        // The exhaust trail (fire and smoke)
+                        if (pos - i) < 3 {
+                            bar.push_str("\x1b[38;5;208m~\x1b[0m"); // Orange fire
+                        } else {
+                            bar.push_str("\x1b[38;5;244m.\x1b[0m"); // Gray smoke
+                        }
+                    } else {
+                        // Stars in the distance (randomly twinkle using current)
+                        if (i + current) % 7 == 0 {
+                            bar.push('*');
+                        } else {
+                            bar.push(' ');
+                        }
+                    }
+                }
+                // Emojis can be tricky with width, but this logic stays standard
+                bar
+            }
+
             Theme::FishBounce => {
                 let fish_chars: Vec<char> = "><(((°>".chars().collect();
                 let fish_len = fish_chars.len();
@@ -327,6 +346,79 @@ impl Theme {
                     res.push(text_chars[idx]);
                 }
                 res
+            }
+
+            Theme::NyanCat => {
+                let cat = "🐱";
+                let percent = if total == 0 { 0.0 } else { current as f64 / total as f64 };
+                let pos = (percent * width as f64) as usize;
+                
+                let colors = [
+                    "\x1b[38;5;196m", // Red
+                    "\x1b[38;5;208m", // Orange
+                    "\x1b[38;5;226m", // Yellow
+                    "\x1b[38;5;46m",  // Green
+                    "\x1b[38;5;21m",  // Blue
+                    "\x1b[38;5;93m",  // Purple
+                ];
+
+                let mut trail = String::new();
+                for i in 0..pos {
+                    let color = colors[i % colors.len()];
+                    // Alternate waves for nyan tail
+                    let char = if (i + current) % 2 == 0 { "~" } else { "-" };
+                    trail.push_str(&format!("{}{}", color, char));
+                }
+                
+                format!("{}\x1b[0m{}\x1b[0m{}", trail, cat, " ".repeat(width.saturating_sub(pos)))
+            }
+
+            Theme::Gradient(start_hex, end_hex) => {
+                let (r1, g1, b1) = Self::hex_to_rgb(start_hex);
+                let (r2, g2, b2) = Self::hex_to_rgb(end_hex);
+                
+                let percent = if total == 0 { 1.0 } else { current as f64 / total as f64 };
+                let filled_len = (percent * width as f64) as usize;
+                
+                let mut bar = String::new();
+                for i in 0..width {
+                    if i < filled_len {
+                        // Interpolate colors
+                        let t = i as f64 / width as f64;
+                        let r = (r1 as f64 + t * (r2 as f64 - r1 as f64)) as u8;
+                        let g = (g1 as f64 + t * (g2 as f64 - g1 as f64)) as u8;
+                        let b = (b1 as f64 + t * (b2 as f64 - b1 as f64)) as u8;
+                        bar.push_str(&format!("\x1b[38;2;{};{};{}m█\x1b[0m", r, g, b));
+                    } else {
+                        bar.push(' ');
+                    }
+                }
+                bar
+            }
+
+            Theme::DualColor(fill_hex, empty_hex) => {
+                let (r1, g1, b1) = Self::hex_to_rgb(fill_hex);
+                let (r2, g2, b2) = Self::hex_to_rgb(empty_hex);
+                
+                let percent = if total == 0 { 0.0 } else { current as f64 / total as f64 };
+                let filled_len = (percent * width as f64) as usize;
+                let empty_len = width.saturating_sub(filled_len);
+            
+                let mut bar = String::new();
+                
+                // '━' sits in the middle of the line height
+                let bar_char = '━'; 
+                
+                // Filled portion (Red)
+                bar.push_str(&format!("\x1b[38;2;{};{};{}m", r1, g1, b1));
+                bar.push_str(&bar_char.to_string().repeat(filled_len));
+                
+                // Empty portion (Gray)
+                bar.push_str(&format!("\x1b[38;2;{};{};{}m", r2, g2, b2));
+                bar.push_str(&bar_char.to_string().repeat(empty_len));
+                
+                bar.push_str("\x1b[0m"); 
+                bar
             }
         }
     }
