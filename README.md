@@ -7,7 +7,7 @@
 A lightweight, highly customizable, and thread-safe-ready CLI progress bar for Rust.
 
 
-![EZBars demo](./assets/functionality_demo.gif)
+![EZBars demo](https://raw.githubusercontent.com/kmolan/EZBars/main/assets/functionality_demo.gif)
 
 ## Features
 
@@ -109,7 +109,7 @@ pb.finish_with_message("Deployment Successful!");
 ## List of styles
 By default, EZBars uses the `Fractional` style for a smooth classic feel. To see all a showcase of all style options, run `cargo run --example style_showcase`. This list will keep growing based on user feedback, so check back often! Many of these styles are also user-configurable for a personal feel.
 
-![style demo](./assets/style_demo.gif)
+![style demo](https://raw.githubusercontent.com/kmolan/EZBars/main/assets/style_demo.gif)
 
 ```rust
 /// [████---] | Deterministic | Fixed-character block bar. Parameters: (filled_char, empty_char)
