@@ -194,3 +194,50 @@ Email me at anmolkathail@gmail.com , or create an issue in the github repository
 
 ## Contributions
 See [CONTRIBUTIONS.md](./CONTRIBUTIONS.md)
+
+## TODO
+- Template String Engine: Flexible layout definition (e.g., "{spinner} [{elapsed}] {bar:40} {bytes}/{total} ({eta})") for ultimate developer control over data placement.
+
+- Throttled I/O Rendering (FPS Capping): Decoupling iteration speed from terminal redraw speed (e.g., max 30-60 redraws/sec) to prevent CPU bottlenecking on micro-second loops.
+
+- Background Ticker Thread: A mechanism to keep indeterminate spinners animating smoothly even when the main thread blocks on heavy synchronous I/O (like database queries). Provide a `enable_steady_tick(100)` method that spawns a lightweight background thread to keep the spinner animating automatically.
+
+- Native Async Stream Wrappers: First-class extension traits for tokio and futures streams to track asynchronous pipelines without manual increment logic.
+
+- Parallel Iterator Extension: Native, lock-free integration with the rayon crate for zero-friction tracking across heavily multi-threaded workloads.
+
+- Dynamic Terminal Resizing (SIGWINCH): Signal handling to detect terminal resizing events, instantly re-scaling the bar width to prevent visual artifacting and line wrapping.
+
+- stderr Default Routing: Adhering to the UNIX philosophy by sending diagnostic UI to stderr by default, allowing developers to pipe stdout safely without corrupting their data.
+
+- Ecosystem Logging Integration: A suspended-draw lock that hides the bar, allows crates like log or tracing to print to the terminal, and instantly redraws the bar underneath.
+
+- Smart Byte & Throughput Formatting: Built-in formatters that auto-scale large integers into human-readable data units (KB, MB, GB) and network speeds (MB/s).
+
+- Pluggable ETA Algorithms: Offering choices between Exponential Moving Average (EMA), Linear Regression, or Sliding Window predictions to match the specific volatility of the task.
+
+- Hierarchical Tree Tasks: Managing nested "parent-child" progress structures for complex pipelines, where a master bar automatically advances based on child completion.
+
+- CI/CD "Dumb" Mode: Automatically switching to periodic text-only emission (e.g., "Progress: 25%" every 10 seconds) when headless environments like GitHub Actions are detected. Automatically detect environment variables like CI=true or GITHUB_ACTIONS=1.
+
+- Custom Widget Columns: Allowing users to inject custom structs that implement a Widget trait, enabling them to render highly specific, dynamic inline data blocks.
+
+- HTTP Client Integration: Pre-built convenience wrappers for crates like reqwest or hyper to track network payloads and file downloads with minimal boilerplate.
+
+- WASM & no_std Compatibility: Feature flags that gracefully degrade or strip out ANSI drawing code, allowing the library to compile cleanly for WebAssembly or embedded targets.
+
+- Pause and Resume States: The ability to temporarily halt the timer and speed calculations during intentional programmatic pauses, preventing the ETA from skewing
+
+- Dual-Line / Multi-Line Status: Allow a progress bar to have a dedicated "Title" line above it that updates independently, preventing the bar itself from shifting left and right when the text length changes.
+
+- Inline Rich Text Markup: Allow users to use a simple markup language in their descriptions instead of manual ANSI codes (e.g., pb.set_description("[bold red]Error[/] parsing file")).
+
+- Lock-Free State Management: For extreme parallel workloads (like rayon iterators processing millions of items), Rc<RefCell> or standard Mutex will bottleneck the CPU. Implement a lock-free atomic state or message-passing channel (MPSC) to handle thousands of concurrent updates safely.
+
+- Native Async/Await Support: Provide .wrap_stream() extension traits for tokio and futures streams, allowing users to track asynchronous file downloads or network requests with zero manual `inc()` calls.
+
+- Log & Tracing Suspension: Provide a suspend(|| { log::info!("...") }) macro. When called, EZBars erases the current bars, prints the log message, and instantly redraws the bars below it. This prevents logs and progress bars from overlapping into terminal garbage.
+
+- Anomaly Detection: Detect if an iteration takes unusually long compared to the baseline, and visually indicate a "stall" or "waiting" state (e.g., turning the bar yellow or changing the spinner) so the user knows the program is hanging, not just processing slowly.
+
+- Post-Mortem Receipts: When a bar finishes, optionally replace the progress track with a detailed summary (e.g., [✓] Processed 500 items in 2.4s (avg: 208 it/s)).
