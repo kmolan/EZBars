@@ -9,6 +9,15 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cli", "progressbar", "progress", "pb", "colors"]
 
+exclude = [
+    "target/*",
+    "assets/*",
+    ".github/*",
+    ".git/*",
+    "*.png",
+    "*.gif"
+]
+
 [badges]
 maintenance = { status = "actively-developed" }
 
